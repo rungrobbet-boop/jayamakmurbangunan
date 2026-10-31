@@ -845,7 +845,7 @@
               @click="openTransactionHistoryModal()"
               class="min-h-[44px] px-3 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer">
               <i class="fa-solid fa-clock-rotate-left text-sm"></i>
-              <span>Riwayat</span>
+              <span>Riwayat Transaksi</span>
             </button>
 
             <!-- Sync Menu -->
@@ -909,73 +909,83 @@
               }">
               
               <template x-for="(menu, idx) in filteredMenuList()" :key="menu.id + '-' + idx">
-                <div 
-                  @click="addToCart(menu)"
-                  :class="viewMode === 'list' 
-                    ? 'bg-white rounded-xl p-2.5 border border-stone-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-row items-center gap-3 cursor-pointer active:scale-98 select-none w-full' 
-                    : 'bg-white rounded-2xl p-3 border border-stone-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer active:scale-98 select-none'">
-                  
-                  <div class="space-y-2.5">
-                    <!-- Foto Produk Aspect-Square -->
-                    <div :class="viewMode === 'list' ? 'w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-stone-100 relative' : 'aspect-square rounded-xl overflow-hidden bg-stone-100 relative'">
-                      <img
-                        x-init="console.log('CEK UI GAMBAR:', menu.name, menu.imageUrl)"
-                        x-bind:src="(menu.imageUrl && menu.imageUrl.trim() !== '') ? menu.imageUrl : 'https://placehold.co/400x400?text=No+Image'"
-                        @error="$event.target.src='https://placehold.co/400x400?text=No+Image'"
-                        :alt="menu.name"
-                        loading="lazy"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <!-- Badge Kategori Mini -->
-                      <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold capitalize" x-text="getCategoryName(menu.categoryId || menu.category)"></span>
-                      
-                      <!-- Badge Angka Stok Mini di Pojok Kanan Atas Gambar Menu -->
-                      <span 
-                        class="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-xs font-black font-mono shadow-md border z-10 backdrop-blur-xs transition-all"
-                        :class="getMenuDisplayStock(menu) > 0 ? 'bg-stone-950/80 text-emerald-400 border-emerald-500/40' : 'bg-stone-950/80 text-red-500 border-red-500/50 animate-pulse'"
-                        x-text="getMenuDisplayStock(menu)">
-                      </span>
-                    </div>
+  <!-- ========================================== -->
+  <!-- MODE LIST (HAMBURGER) -->
+  <!-- ========================================== -->
+  <div x-show="viewMode === 'list'" 
+       @click="addToCart(menu)"
+       class="bg-white rounded-2xl p-3 border border-stone-200 shadow-xs transition-all flex flex-row items-center gap-3 sm:gap-4 w-full cursor-pointer group">
+    
+    <!-- Kiri: Gambar -->
+    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden bg-stone-100">
+      <img :src="(menu.imageUrl && menu.imageUrl.trim() !== '') ? menu.imageUrl : 'https://placehold.co/400x400?text=No+Image'" 
+           @error="$event.target.src='https://placehold.co/400x400?text=No+Image'" 
+           :alt="menu.name" class="w-full h-full object-cover" />
+      <span class="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-stone-950/80 text-[9px] font-bold text-emerald-400 border border-emerald-500/40 backdrop-blur-xs" 
+            x-text="getMenuDisplayStock(menu)"></span>
+    </div>
 
-                    <!-- Nama Menu -->
-                    <div :class="viewMode === 'list' ? 'flex-1 min-w-0' : 'mt-2'">
-                      <h4 class="font-bold text-xs sm:text-sm text-stone-900 leading-snug group-hover:text-emerald-700 transition-colors line-clamp-2" x-text="menu.name"></h4>
-                      <p x-show="viewMode !== 'list'" class="text-[11px] text-stone-400 mt-0.5 line-clamp-1" x-text="menu.desc || 'Bahan bangunan siap pakai'"></p>
-                      <div x-show="viewMode === 'list'" class="mt-1">
-                         <span class="font-extrabold text-xs text-brand-600 font-mono" x-text="formatRupiah(menu.priceEcer || menu.price)"></span>
-                      </div>
-                    </div>
-                  </div>
+    <!-- Tengah: Info Produk -->
+    <div class="flex-1 min-w-0 flex flex-col justify-center">
+      <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider" x-text="getCategoryName(menu.categoryId || menu.category)"></span>
+      <h4 class="font-bold text-sm text-stone-900 leading-tight truncate group-hover:text-emerald-700" x-text="menu.name"></h4>
+      <div class="flex flex-wrap items-baseline gap-x-2 mt-1">
+        <span class="text-sm font-black text-emerald-700 font-mono" x-text="formatRupiah(menu.priceEcer || menu.price)"></span>
+        <span class="text-[10px] text-stone-500" x-text="' / ' + (menu.unit || 'pcs')"></span>
+        <!-- Opsional: Tampilkan Harga Partai jika ada -->
+        <template x-if="menu.pricePartai > 0">
+          <span class="text-[10px] font-bold text-stone-400 font-mono" x-text="'Partai: ' + formatRupiah(menu.pricePartai)"></span>
+        </template>
+      </div>
+    </div>
 
-                  <!-- Harga & Tombol Tambah / Edit Komponen -->
-                  <div x-show="viewMode !== 'list'" class="pt-3 mt-2 border-t border-stone-100 flex items-center justify-between gap-1">
-                    <div class="flex flex-col">
-                      <span class="font-extrabold text-xs sm:text-sm text-brand-600 font-mono" x-text="formatRupiah(menu.priceEcer || menu.price)"></span>
-                      <button 
-                        type="button" 
-                        @click.stop="openProductRecipeModal(menu, true)"
-                        class="text-[10px] text-amber-700 hover:text-amber-900 font-bold inline-flex items-center gap-1 mt-0.5 transition cursor-pointer"
-                        :title="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'Detail Produk & Harga' : 'Detail & Harga Grosir'">
-                        <i :class="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-mortar-pestle'" class="text-[9px]"></i>
-                        <span x-text="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'Detail Produk & Harga' : 'Detail Produk & Harga'"></span>
-                      </button>
-                    </div>
-                    
-                    <button 
-                      type="button" 
-                      class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition shadow-2xs">
-                      <i class="fa-solid fa-plus text-xs"></i>
-                    </button>
-                  </div>
+    <!-- Kanan: Tombol Tambah -->
+    <div class="flex-shrink-0 pr-1">
+      <button type="button" class="min-h-[40px] px-3 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center transition shadow-sm">
+        <i class="fa-solid fa-plus"></i>
+        <span class="hidden sm:inline">Tambah</span>
+      </button>
+    </div>
+  </div>
 
-                  <div x-show="viewMode === 'list'" class="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span class="text-[10px] font-bold text-stone-500" x-text="getMenuDisplayStock(menu) + ' ' + (menu.unit || 'pcs')"></span>
-                    <button type="button" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition shadow-2xs">
-                      <i class="fa-solid fa-plus text-xs"></i>
-                    </button>
-                  </div>
-                </div>
-              </template>
+  <!-- ========================================== -->
+  <!-- MODE GRID (BESAR / KECIL) -->
+  <!-- ========================================== -->
+  <div x-show="viewMode !== 'list'" 
+       @click="addToCart(menu)"
+       class="bg-white rounded-2xl p-3 border border-stone-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer active:scale-98 select-none">
+    
+    <div class="space-y-2.5">
+      <div class="aspect-square rounded-xl overflow-hidden bg-stone-100 relative">
+        <img :src="(menu.imageUrl && menu.imageUrl.trim() !== '') ? menu.imageUrl : 'https://placehold.co/400x400?text=No+Image'" 
+             @error="$event.target.src='https://placehold.co/400x400?text=No+Image'" 
+             :alt="menu.name" loading="lazy" class="w-full h-full object-cover" />
+        <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold capitalize" x-text="getCategoryName(menu.categoryId || menu.category)"></span>
+        <span class="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-xs font-black font-mono shadow-md border z-10 backdrop-blur-xs" 
+              :class="getMenuDisplayStock(menu) > 0 ? 'bg-stone-950/80 text-emerald-400 border-emerald-500/40' : 'bg-stone-950/80 text-red-500 border-red-500/50 animate-pulse'" 
+              x-text="getMenuDisplayStock(menu)"></span>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-xs sm:text-sm text-stone-900 leading-snug group-hover:text-emerald-700 transition-colors line-clamp-2" x-text="menu.name"></h4>
+        <p class="text-[11px] text-stone-400 mt-0.5 line-clamp-1" x-text="menu.desc || 'Bahan bangunan siap pakai'"></p>
+      </div>
+
+      <div class="pt-3 mt-2 border-t border-stone-100 flex items-center justify-between gap-1">
+        <div class="flex flex-col">
+          <span class="font-extrabold text-xs sm:text-sm text-brand-600 font-mono" x-text="formatRupiah(menu.priceEcer || menu.price)"></span>
+          <button type="button" @click.stop="openProductRecipeModal(menu, true)" class="text-[10px] text-amber-700 hover:text-amber-900 font-bold inline-flex items-center gap-1 mt-0.5 transition cursor-pointer">
+            <i class="fa-solid fa-pen-to-square text-[9px]"></i>
+            <span>Detail Produk & Harga</span>
+          </button>
+        </div>
+        <button type="button" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition shadow-2xs">
+          <i class="fa-solid fa-plus text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
 
               <!-- State Jika Hasil Pencarian Kosong -->
               <div 
