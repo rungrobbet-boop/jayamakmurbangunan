@@ -1017,12 +1017,13 @@
 <div 
   x-show="showCartMobile" 
   x-transition.opacity.duration.200ms
+  x-cloak
   class="fixed inset-0 bg-black/50 z-[9998] md:hidden"
   @click="showCartMobile = false">
 </div>
 
           <!-- KOLOM KANAN (4 cols desktop, Sticky Top): Keranjang POS Kasir -->
-          <div class="fixed inset-y-0 right-0 z-[9999] w-full max-w-md h-[100dvh] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:h-auto lg:max-w-none lg:w-auto lg:shadow-none lg:bg-transparent lg:transform-none lg:col-span-4" :class="showCartMobile ? 'translate-x-0' : 'translate-x-full lg:hidden'">
+          <div class="x-cloak class="fixed inset-y-0 right-0 z-[9999] w-full max-w-md h-[100dvh] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:h-auto lg:max-w-none lg:w-auto lg:shadow-none lg:bg-transparent lg:transform-none lg:col-span-4" :class="showCartMobile ? 'translate-x-0' : 'translate-x-full lg:hidden'">
             <div class="bg-white rounded-3xl p-5 border border-stone-200 shadow-none flex flex-col space-y-4 pointer-events-auto h-full lg:h-[calc(100vh-140px)] lg:overflow-hidden">
               
               <!-- Header Keranjang: Judul + Hapus Semua (FIX FINAL) -->
@@ -4670,7 +4671,7 @@
 
           <!-- FASE 5: footer standar struk (nama outlet dari siteConfig.brandName) -->
           <div class="text-center text-[10px] pt-3 border-t border-dashed border-stone-300 leading-snug text-stone-700"
-            x-text="'Terima kasih sudah berbelanja di ' + ((siteInfo && siteInfo.brandName) ? siteInfo.brandName : 'MyDigitalShop') + ' & selamat menikmati.'"></div>
+            x-text="'Terima kasih sudah berbelanja di ' + ((siteInfo && siteInfo.brandName) ? siteInfo.brandName : 'MyDigitalShop') + ' & semoga sukses lancar selalu.'"></div>
         </div>
 
         <!-- ✅ FEATURE-3 + FASE 5: nomor WA pelanggan (auto-populate readonly untuk order online) -->
