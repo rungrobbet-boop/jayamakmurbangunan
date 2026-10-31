@@ -270,6 +270,7 @@ window.kasirApp = () => ({
     previewPdfUrl: '',
     currentSJUrl: '',
     viewMode: 'grid-large',
+    isReadOnlyMode: false,
 
     // Fitur Diskon, Pajak & Biaya Lainnya Keranjang
   orderDiscountType: 'percent', // 'percent' | 'nominal'
@@ -3579,7 +3580,7 @@ async loadMoreProducts() {
    */
   strukFooterText() {
     const brand = (this.siteInfo && this.siteInfo.brandName) ? String(this.siteInfo.brandName).trim() : 'MyDigitalShop';
-    return `Terima kasih sudah berbelanja di ${brand}.`;
+    return `Terima kasih sudah berbelanja di ${brand} & semoga sukses lancar selalu.`;
   },
 
   strukFooterLines(doc, width = 72) {
@@ -8037,8 +8038,9 @@ async loadMoreProducts() {
   /**
    * Buka modal manajemen resep/bahan baku produk
    */
-  openProductRecipeModal(menu) {
+  openProductRecipeModal(menu, isReadOnly = false) {
     if (!menu) return;
+    this.isReadOnlyMode = isReadOnly;
     this.selectedProductForRecipe = menu;
     const existingRecipe = this.menuRecipes[menu.id] || { ingredients: [] };
     
