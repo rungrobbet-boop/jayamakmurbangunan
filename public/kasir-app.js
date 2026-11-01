@@ -13830,18 +13830,30 @@ async loadMoreProducts() {
         return;
       }
 
+      console.log('[VOID-DEBUG] submitVoidReason: starting, txId:', this.activeVoidTx?.id);
       this.isVoidProcessing = true;
       try {
         await this.voidTransaksi(this.activeVoidTx, reason);
+        console.log('[VOID-DEBUG] submitVoidReason: voidTransaksi completed');
         this.showVoidModal = false;
       } catch (e) {
+        console.error('[VOID-DEBUG] submitVoidReason error:', e.message);
         // Error sudah di-handle di dalam voidTransaksi
       } finally {
+        console.log('[VOID-DEBUG] submitVoidReason: finally, resetting isVoidProcessing');
         this.isVoidProcessing = false;
       }
+      // Safety net: pastikan isVoidProcessing tidak stuck selamanya
+      setTimeout(() => {
+        if (this.isVoidProcessing) {
+          console.warn('[VOID-DEBUG] SAFETY NET: isVoidProcessing still true after 35s, forcing false');
+          this.isVoidProcessing = false;
+        }
+      }, 35000);
     },
 
     async voidTransaksi(tx, reason) {
+      console.log('[VOID-DEBUG] voidTransaksi: started for txId:', tx?.id || tx?.orderId);
       if (!tx) return;
       const txId = tx.id || tx.orderId;
       if (!txId) { this.showToast('ID transaksi tidak valid', 'error'); return; }
@@ -13866,7 +13878,9 @@ async loadMoreProducts() {
       try {
         // 1. Ambil data transaksi asli dari RTDB (dengan timeout protection)
         const txRef = this._fbRef(this._fbDb, `pos/transactions/${dateStr}/${txId}`);
+        console.log('[VOID-DEBUG] Step 1: fbGet tx starting');
         const snap = await withTimeout(this._fbGet(txRef), 30000, 'fbGet tx');
+        console.log('[VOID-DEBUG] Step 1: fbGet tx done');
         const existingData = snap.val();
 
         if (!existingData) {
@@ -13883,7 +13897,9 @@ async loadMoreProducts() {
         };
 
         // 3. Simpan kembali ke RTDB (dengan timeout protection)
+        console.log('[VOID-DEBUG] Step 2: fbSet tx starting');
         await withTimeout(this._fbSet(txRef, updatedData), 30000, 'fbSet tx');
+        console.log('[VOID-DEBUG] Step 2: fbSet tx done');
         console.log('[VOID] ✅ Transaksi berhasil di-update di RTDB');
 
         // 4. Kembalikan stok ke RTDB /inventory dan Firestore products (JANGAN manipulasi state lokal)
@@ -13897,9 +13913,12 @@ async loadMoreProducts() {
           if (this._fbDb && this._fbRef && this._fbSet) {
             try {
               const invRef = this._fbRef(this._fbDb, `inventory/${itemId}`);
+              console.log('[VOID-DEBUG] Step 3: fbGet inv starting for itemId:', itemId);
               const invSnap = await withTimeout(this._fbGet(invRef), 30000, 'fbGet inv');
+              console.log('[VOID-DEBUG] Step 3: fbGet inv done for itemId:', itemId);
               const current = invSnap.val() || {};
               const currentStock = Number(current.stock !== undefined ? current.stock : current.stok) || 0;
+              console.log('[VOID-DEBUG] Step 4: fbSet inv starting for itemId:', itemId);
               await withTimeout(this._fbSet(invRef, {
                 ...current,
                 stock: currentStock + qty,
@@ -13942,6 +13961,7 @@ async loadMoreProducts() {
           if (typeof FB_FS !== 'undefined' && FB_FS) {
             try {
               const productRef = FB_FS.collection('products').doc(itemId);
+              console.log('[VOID-DEBUG] Step 5: firestore update starting for itemId:', itemId);
               await withTimeout(productRef.update({
                 stock: firebase.firestore.FieldValue.increment(qty),
                 stok: firebase.firestore.FieldValue.increment(qty)
@@ -13956,7 +13976,9 @@ async loadMoreProducts() {
         // 5. Jalankan reverseFifoSale (bungkus try-catch agar tidak menghentikan proses)
         if (existingData.usedBatches && existingData.usedBatches.length > 0) {
           try {
+            console.log('[VOID-DEBUG] Step 6: reverseFifoSale starting');
             await withTimeout(this.reverseFifoSale(existingData.usedBatches, txId), 30000, 'reverseFifo');
+            console.log('[VOID-DEBUG] Step 6: reverseFifoSale done');
             console.log(`[VOID] FIFO reverse berhasil untuk ${existingData.usedBatches.length} batch`);
           } catch (fifoErr) {
             console.warn('[VOID] Reverse FIFO gagal, tapi stok utama aman:', fifoErr);
@@ -13974,9 +13996,13 @@ async loadMoreProducts() {
 
         // 7. Tarik ulang data inventory dari database (paksa refresh agar UI reaktif)
         try {
+          console.log('[VOID-DEBUG] Step 7: loadInventory starting');
           await withTimeout(this.loadInventory({ force: true }), 30000, 'loadInventory');
+          console.log('[VOID-DEBUG] Step 7: loadInventory done');
           if (typeof this.listenMenuItems === 'function') {
+            console.log('[VOID-DEBUG] Step 8: listenMenuItems starting');
             await withTimeout(this.listenMenuItems(), 30000, 'listenMenuItems');
+            console.log('[VOID-DEBUG] Step 8: listenMenuItems done');
           }
         } catch (e) {
           console.warn('[VOID] Gagal refresh inventory UI:', e);
@@ -13993,7 +14019,9 @@ async loadMoreProducts() {
         let hasHppJournal = false;
         let hppAmountFromJournal = 0;
         try {
+          console.log('[VOID-DEBUG] Step 9: fetch journal GET starting');
           const journalRes = await withTimeout(fetch(`/accounting/journal/${bulan}`), 15000, 'fetch journal');
+          console.log('[VOID-DEBUG] Step 9: fetch journal GET done');
           if (journalRes.ok) {
             const journalJson = await journalRes.json();
             if (journalJson && journalJson.success && Array.isArray(journalJson.data)) {
@@ -14023,6 +14051,7 @@ async loadMoreProducts() {
             } else if (hppAmount > 0) {
               console.log(`[VOID] Transaksi lama tidak punya jurnal HPP asli, melewati reversal HPP.`);
             }
+            console.log('[VOID-DEBUG] Step 10: fetch journal POST starting');
             await withTimeout(fetch(`/accounting/journal/${bulan}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -14043,13 +14072,19 @@ async loadMoreProducts() {
         // 8.5. Paksa refresh data akuntansi agar Laporan Kasir sinkron setelah void
         this.accountingSummaryLastFetch = 0;
         if (typeof this.loadAccountingSummary === 'function') {
+          console.log('[VOID-DEBUG] Step 11: loadAccountingSummary starting');
           await withTimeout(this.loadAccountingSummary(true), 30000, 'loadAccountingSummary');
+          console.log('[VOID-DEBUG] Step 11: loadAccountingSummary done');
         }
         if (typeof this.loadLaporanHariIni === 'function') {
+          console.log('[VOID-DEBUG] Step 12: loadLaporanHariIni starting');
           await withTimeout(this.loadLaporanHariIni(), 30000, 'loadLaporanHariIni');
+          console.log('[VOID-DEBUG] Step 12: loadLaporanHariIni done');
         }
         if (typeof this.loadCOAListFromBackend === 'function') {
+          console.log('[VOID-DEBUG] Step 13: loadCOAListFromBackend starting');
           await withTimeout(this.loadCOAListFromBackend(), 30000, 'loadCOAListFromBackend');
+          console.log('[VOID-DEBUG] Step 13: loadCOAListFromBackend done');
         }
 
       } catch (err) {
