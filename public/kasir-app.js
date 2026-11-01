@@ -220,10 +220,6 @@ window.kasirApp = () => ({
   menuList: [],
   categories: [
     { id: 'semua', name: 'Semua' },
-    { id: 'semen', name: 'Semen' },
-    { id: 'cat', name: 'Cat' },
-    { id: 'besi', name: 'Besi' },
-    { id: 'lainnya', name: 'Lainnya' },
   ],
   selectedCategory: 'semua',
   searchQuery: '',
@@ -2351,6 +2347,16 @@ async loadMoreProducts() {
     return this.formatCategoryName(categoryId);
   },
 
+  getStoreName() {
+    if (this.siteInfo && this.siteInfo.brandName) {
+      return String(this.siteInfo.brandName).trim();
+    }
+    if (this.customKasirTitle) {
+      return String(this.customKasirTitle).trim();
+    }
+    return 'MyDigitalShop';
+  },
+
   /**
    * Sinkronkan stok inventory kasir ke Firestore (collection 'inventory_sync').
    * Dipakai tombol "Sync Stok" di UI kasir. One-time write, tidak realtime.
@@ -3452,7 +3458,7 @@ async loadMoreProducts() {
     if (custPhone) {
       const custName = (orderData && (orderData.customerName || orderData.name)) || this.customerName || 'Pelanggan';
       const itemsSummary = (this.currentOrder.items || []).map(it => `- ${it.name || it.id} x${it.qty}`).join('\n');
-      const waMsg = `Halo Kak ${custName}, terima kasih sudah bertransaksi di ${this.customKasirTitle || 'MyDigitalShop POS'}! ✨\n\nNo. Order: #${txId}\nTotal: ${this.formatRupiah(grandTotal)}\nMetode: ${pm.toUpperCase()}\nTanggal: ${dateStr}\n\nPesanan:\n${itemsSummary}\n\nStruk transaksi Anda telah berhasil diproses. Semoga puas dengan barang kami! 🙏`;
+      const waMsg = `Halo Kak ${custName}, terima kasih sudah bertransaksi di ${this.getStoreName()}! ✨\n\nNo. Order: #${txId}\nTotal: ${this.formatRupiah(grandTotal)}\nMetode: ${pm.toUpperCase()}\nTanggal: ${dateStr}\n\nPesanan:\n${itemsSummary}\n\nStruk transaksi Anda telah berhasil diproses. Semoga puas dengan barang kami! 🙏`;
       this.sendWhatsAppNotification(custPhone, waMsg, 'pos_receipt');
     }
 
@@ -3932,7 +3938,7 @@ async loadMoreProducts() {
 
         doc.setFont('courier', 'bold');
         doc.setFontSize(11);
-        doc.text('MyDigitalShop POS', 40, 9, { align: 'center' });
+        doc.text(this.getStoreName(), 40, 9, { align: 'center' });
         doc.setFont('courier', 'normal');
         doc.setFontSize(7.5);
         doc.text('Jl. Raya Toko Bangunan No. 88, Jaksel', 40, 13, { align: 'center' });
@@ -4056,7 +4062,7 @@ async loadMoreProducts() {
     if (sCharge > 0) details += `Biaya Layanan (5%): ${this.formatRupiah(sCharge)}\n`;
     if (tax > 0) details += `PPN (11%): ${this.formatRupiah(tax)}\n`;
 
-    const text = `*MyDigitalShop POS - STRUK TRANSAKSI*\n\n` +
+    const text = `*${this.getStoreName().toUpperCase()} - STRUK TRANSAKSI*\n\n` +
       `No. Order: *${order.id}*\n` +
       `Tanggal: ${order.date || this.formatDate(Date.now())}\n` +
       `Kasir: ${this.kasirInfo.name}\n` +
@@ -4066,7 +4072,7 @@ async loadMoreProducts() {
       `--------------------------------\n` +
       details +
       `*TOTAL: ${this.formatRupiah(order.total || order.tot || this.getCartGrandTotal())}*\n\n` +
-      `Terima kasih telah berbelanja di MyDigitalShop!`;
+      `Terima kasih telah berbelanja di ${this.getStoreName()}!`;
     // ✅ FEATURE-3: prioritas nomor dari param → state receiptWAPhone → generic share
     const rawPhone = phoneInput !== undefined ? phoneInput : (this.receiptWAPhone || '');
     let cleanPhone = String(rawPhone || '').replace(/[^0-9]/g, '');
@@ -5882,7 +5888,7 @@ async loadMoreProducts() {
       const phone = orderData.customerPhone || orderData.phone || orderData.customer_phone || '';
       if (phone) {
         const custName = orderData.customerName || orderData.customer_name || 'Pelanggan';
-        const confMsg = `Halo Kak ${custName}, pesanan Anda #${orderId} telah kami KONFIRMASI dan sedang diproses di gudang! 📦 Terima kasih telah memesan di ${this.customKasirTitle || 'MyDigitalShop POS'}.`;
+        const confMsg = `Halo Kak ${custName}, pesanan Anda #${orderId} telah kami KONFIRMASI dan sedang diproses di gudang! 📦 Terima kasih telah memesan di ${this.getStoreName()}.`;
         this.sendWhatsAppNotification(phone, confMsg, 'order_confirmed');
       }
     } catch (e) {
@@ -12238,7 +12244,7 @@ async loadMoreProducts() {
       ctx.fillStyle = '#111827';
       ctx.font = 'bold 16px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(this.customKasirTitle || 'MyDigitalShop POS', 200, 35);
+      ctx.fillText(this.getStoreName(), 200, 35);
 
       ctx.font = 'bold 13px sans-serif';
       ctx.fillStyle = '#047857';
@@ -12331,7 +12337,7 @@ async loadMoreProducts() {
       const doc = new window.jspdf.jsPDF('p', 'mm', [80, 140]);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text(this.customKasirTitle || 'MyDigitalShop POS', 40, 8, { align: 'center' });
+      doc.text(this.getStoreName(), 40, 8, { align: 'center' });
 
       doc.setFontSize(9);
       doc.text('BUKTI TANDA TERIMA KONSINYASI', 40, 13, { align: 'center' });
@@ -12399,7 +12405,7 @@ async loadMoreProducts() {
     const itemsText = (rec.items || []).map(i =>
       `- ${i.name} (${i.sku}): ${i.qty} ${i.unit} x Rp ${this.formatNumber(i.price)} = Rp ${this.formatNumber(i.total)}`
     ).join('\n');
-    const msg = `*BUKTI TANDA TERIMA BARANG KONSINYASI*\n${this.customKasirTitle || 'MyDigitalShop POS'}\n\nNo. Terima: ${rec.receiveId}\nTanggal: ${rec.date} ${rec.time || ''}\nSupplier: ${rec.supplierName}\n\n*Daftar Barang:*\n${itemsText}\n\n*Total Nilai: Rp ${this.formatNumber(rec.totalValue)}*\n\nBarang titipan konsinyasi telah diterima dengan baik. Terima kasih! 🙏`;
+    const msg = `*BUKTI TANDA TERIMA BARANG KONSINYASI*\n${this.getStoreName()}\n\nNo. Terima: ${rec.receiveId}\nTanggal: ${rec.date} ${rec.time || ''}\nSupplier: ${rec.supplierName}\n\n*Daftar Barang:*\n${itemsText}\n\n*Total Nilai: Rp ${this.formatNumber(rec.totalValue)}*\n\nBarang titipan konsinyasi telah diterima dengan baik. Terima kasih! 🙏`;
 
     // ✅ FIX: window.open SINKRON (dalam user gesture) — popup blocker tidak block
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
@@ -12672,7 +12678,7 @@ async loadMoreProducts() {
 
       // WhatsApp Notifikasi ke Supplier
       if (supSummary.contact) {
-        const msg = `*BUKTI SETTLEMENT KONSINYASI HARIAN*\n${this.customKasirTitle || 'MyDigitalShop POS'}\n\nID Settlement: ${stlId}\nTanggal: ${this.settlementDate}\nSupplier: ${supSummary.supplierName}\n\nTotal Barang Laku : ${supSummary.soldQty} pcs\nTotal Pembayaran  : Rp ${this.formatNumber(amount)}\nMetode Pembayaran : ${pm.toUpperCase()}\nStatus: LUNAS DIBAYARKAN ✅\n\nTerima kasih atas kerja samanya! 🙏`;
+        const msg = `*BUKTI SETTLEMENT KONSINYASI HARIAN*\n${this.getStoreName()}\n\nID Settlement: ${stlId}\nTanggal: ${this.settlementDate}\nSupplier: ${supSummary.supplierName}\n\nTotal Barang Laku : ${supSummary.soldQty} pcs\nTotal Pembayaran  : Rp ${this.formatNumber(amount)}\nMetode Pembayaran : ${pm.toUpperCase()}\nStatus: LUNAS DIBAYARKAN ✅\n\nTerima kasih atas kerja samanya! 🙏`;
         this.sendWhatsAppNotification(supSummary.contact, msg, 'settlement');
       }
     } catch (err) {
@@ -13166,7 +13172,7 @@ async loadMoreProducts() {
       `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
       `Terima kasih atas kerja samanya!\n` +
       `Besok titipan lagi ya 🙏\n\n` +
-      `_POS MyDigitalShop_`;
+      `_${this.getStoreName()}_`;
 
         // ✅ FIX: Langsung buka WhatsApp Web/App (bypass API)
     if (!phone) {
@@ -13199,7 +13205,7 @@ async loadMoreProducts() {
       const doc = new window.jspdf.jsPDF('p', 'mm', [80, 150]);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text(this.customKasirTitle || 'MyDigitalShop POS', 40, 8, { align: 'center' });
+      doc.text(this.getStoreName(), 40, 8, { align: 'center' });
       doc.setFontSize(9);
       doc.text('LAPORAN SETTLEMENT KONSINYASI', 40, 13, { align: 'center' });
       doc.setLineWidth(0.2);

@@ -966,7 +966,7 @@
                 x-show="filteredMenuList().length === 0" 
                 class="col-span-full bg-white rounded-3xl p-8 text-center border border-stone-200 text-stone-500 space-y-3">
                 <div class="w-16 h-16 rounded-full bg-stone-100 text-stone-400 mx-auto flex items-center justify-center text-2xl">
-                  <i class="fa-solid fa-utensils"></i>
+                  <i class="fa-solid fa-box"></i>
                 </div>
                 <h4 class="font-bold text-base text-stone-800">Menu tidak ditemukan</h4>
                 <p class="text-xs text-stone-500 max-w-sm mx-auto">
@@ -1989,7 +1989,7 @@
                 @click="inventoryTab = 'products'"
                 :class="inventoryTab === 'products' ? 'bg-white text-stone-900 font-black shadow-xs' : 'text-stone-500 font-semibold'"
                 class="px-3 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fa-solid fa-utensils text-[10px]"></i>
+                <i class="fa-solid fa-box text-[10px]"></i>
                 <span>Produk Menu &amp; Resep</span>
               </button>
               <button 
@@ -2195,7 +2195,7 @@
                     @click="openProductRecipeModal(menu, true)"
                     :class="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'"
                     class="w-full min-h-[38px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs">
-                    <i :class="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'fa-solid fa-pen-to-square text-emerald-700' : 'fa-solid fa-mortar-pestle text-amber-700'" class="text-[11px]"></i>
+                    <i :class="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'fa-solid fa-pen-to-square text-emerald-700' : 'fa-solid fa-box text-amber-700'" class="text-[11px]"></i>
                     <span x-text="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'Detail Produk & Harga' : 'Detail & Harga Grosir'"></span>
                   </button>
                 </div>
@@ -2316,7 +2316,7 @@
                       @click="openGenerateMenuModal(item)"
                       class="min-h-[44px] px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
                       title="Jadikan produk siap jual di POS">
-                      <i class="fa-solid fa-utensils text-[11px] text-amber-600"></i>
+                      <i class="fa-solid fa-box text-[11px] text-amber-600"></i>
                       <span>📦 Jadi Produk</span>
                     </button>
                   </template>
@@ -3103,7 +3103,7 @@
               <!-- ==== /RTO FASE 4 ==== -->
 
               <div class="bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-xs">
-                <p class="font-extrabold text-stone-800 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-utensils"></i> Rincian Pesanan</p>
+                <p class="font-extrabold text-stone-800 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-box"></i> Rincian Pesanan</p>
                 <div class="space-y-1">
                   <template x-for="it in ((orderOnlineDetail && orderOnlineDetail.items) || [])" :key="it.id + '-' + it.qty">
                     <div class="flex items-center justify-between">
@@ -4988,7 +4988,7 @@
       <div class="p-3 rounded-xl bg-stone-50 border border-stone-200 space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-stone-700 uppercase tracking-wider">
-            <i class="fa-solid fa-utensils text-brand-600 mr-1"></i>Menu Pesanan & Stok
+            <i class="fa-solid fa-box text-brand-600 mr-1"></i>Menu Pesanan & Stok
           </span>
           <span class="text-[10px] font-mono text-stone-400" x-text="(activeReconcileItem && activeReconcileItem.items ? activeReconcileItem.items.length : 0) + ' item'"></span>
         </div>
@@ -5796,7 +5796,7 @@
 
       <div class="flex items-center gap-3.5 pb-2 border-b border-stone-100">
         <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-md">
-          <i class="fa-solid fa-utensils"></i>
+          <i class="fa-solid fa-box"></i>
         </div>
         <div>
           <h4 class="font-extrabold text-stone-900 text-base">Tambah Produk Baru</h4>
@@ -7981,7 +7981,7 @@
       <div class="flex items-center justify-between pb-3 border-b border-stone-100">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
-            <i class="fa-solid fa-utensils text-sm"></i>
+            <i class="fa-solid fa-box text-sm"></i>
           </div>
           <div>
             <h3 class="font-black text-stone-900 text-base">🍽️ Jadikan Produk Siap Jual di POS</h3>
