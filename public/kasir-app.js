@@ -2464,7 +2464,7 @@ async loadMoreProducts() {
         margin: { left: 10, right: 10 }
       });
 
-      const finalY = doc.lastAutoTable.finalY + 10;
+      let finalY = doc.lastAutoTable.finalY + 10;
 
       // Rincian biaya
       doc.setFontSize(9);
