@@ -10920,11 +10920,13 @@ async loadMoreProducts() {
    * - resolve(false) → user batal / salah 3x tidak ada lock
    */
   requestSupervisorPin(actionLabel, targetLabel, opts = {}) {
+    console.log('[PIN-DEBUG] requestSupervisorPin: called for', actionLabel, '- showing modal');
     return new Promise((resolve) => {
       this.pinContext = { actionLabel, targetLabel, opts, resolve };
       this.pinInput = '';
       this.pinErrorMessage = '';
       this.showPinModal = true;
+      console.log('[PIN-DEBUG] requestSupervisorPin: showPinModal set to', this.showPinModal);
       this.playSound('notify');
 
       // Auto-focus ke input setelah modal render
@@ -10962,8 +10964,10 @@ async loadMoreProducts() {
       if (ctx && ctx.opts && ctx.opts.capturePin) this._lastVerifiedSupervisorPin = pin;
       this.playSound('success');
 
+      console.log('[PIN-DEBUG] submitSupervisorPin: PIN correct, resolving true');
       if (ctx && typeof ctx.resolve === 'function') {
         ctx.resolve(true);
+        console.log('[PIN-DEBUG] submitSupervisorPin: resolve(true) called');
       }
     } else {
       // ❌ PIN SALAH — tidak lock, kasih pesan
@@ -10995,9 +10999,13 @@ async loadMoreProducts() {
     this.pinContext = null;
     this.playSound('click');
 
+    console.log('[PIN-DEBUG] cancelSupervisorPin: user cancelled, resolving false');
     if (ctx) {
       this.logAudit(ctx.actionLabel || 'UNKNOWN', ctx.targetLabel || '-', 'cancelled');
-      if (typeof ctx.resolve === 'function') ctx.resolve(false);
+      if (typeof ctx.resolve === 'function') {
+        ctx.resolve(false);
+        console.log('[PIN-DEBUG] cancelSupervisorPin: resolve(false) called');
+      }
     }
   },
 
