@@ -13864,9 +13864,9 @@ async loadMoreProducts() {
       console.log(`[VOID] Mencoba void txId: ${txId} pada tanggal: ${dateStr}`);
 
       try {
-        // 1. Ambil data transaksi asli dari RTDB
+        // 1. Ambil data transaksi asli dari RTDB (dengan timeout protection)
         const txRef = this._fbRef(this._fbDb, `pos/transactions/${dateStr}/${txId}`);
-        const snap = await this._fbGet(txRef);
+        const snap = await withTimeout(this._fbGet(txRef), 30000, 'fbGet tx');
         const existingData = snap.val();
 
         if (!existingData) {
@@ -13882,8 +13882,8 @@ async loadMoreProducts() {
           voidReason: reason.trim()
         };
 
-        // 3. Simpan kembali ke RTDB
-        await this._fbSet(txRef, updatedData);
+        // 3. Simpan kembali ke RTDB (dengan timeout protection)
+        await withTimeout(this._fbSet(txRef, updatedData), 30000, 'fbSet tx');
         console.log('[VOID] ✅ Transaksi berhasil di-update di RTDB');
 
         // 4. Kembalikan stok ke RTDB /inventory dan Firestore products (JANGAN manipulasi state lokal)
@@ -13897,15 +13897,15 @@ async loadMoreProducts() {
           if (this._fbDb && this._fbRef && this._fbSet) {
             try {
               const invRef = this._fbRef(this._fbDb, `inventory/${itemId}`);
-              const invSnap = await this._fbGet(invRef);
+              const invSnap = await withTimeout(this._fbGet(invRef), 30000, 'fbGet inv');
               const current = invSnap.val() || {};
               const currentStock = Number(current.stock !== undefined ? current.stock : current.stok) || 0;
-              await this._fbSet(invRef, {
+              await withTimeout(this._fbSet(invRef, {
                 ...current,
                 stock: currentStock + qty,
                 stok: currentStock + qty,
                 updatedAt: Date.now()
-              });
+              }), 30000, 'fbSet inv');
               console.log(`[VOID] Stok RTDB ${itemId} dikembalikan +${qty}`);
 
               // Log inventori pengembalian stok karena void transaksi
@@ -13942,10 +13942,10 @@ async loadMoreProducts() {
           if (typeof FB_FS !== 'undefined' && FB_FS) {
             try {
               const productRef = FB_FS.collection('products').doc(itemId);
-              await productRef.update({
+              await withTimeout(productRef.update({
                 stock: firebase.firestore.FieldValue.increment(qty),
                 stok: firebase.firestore.FieldValue.increment(qty)
-              });
+              }), 30000, 'firestore update');
               console.log(`[VOID] Stok Firestore ${itemId} dikembalikan +${qty}`);
             } catch (fsErr) {
               console.warn(`[VOID] Gagal update Firestore products/${itemId}:`, fsErr);
@@ -13956,7 +13956,7 @@ async loadMoreProducts() {
         // 5. Jalankan reverseFifoSale (bungkus try-catch agar tidak menghentikan proses)
         if (existingData.usedBatches && existingData.usedBatches.length > 0) {
           try {
-            await this.reverseFifoSale(existingData.usedBatches, txId);
+            await withTimeout(this.reverseFifoSale(existingData.usedBatches, txId), 30000, 'reverseFifo');
             console.log(`[VOID] FIFO reverse berhasil untuk ${existingData.usedBatches.length} batch`);
           } catch (fifoErr) {
             console.warn('[VOID] Reverse FIFO gagal, tapi stok utama aman:', fifoErr);
@@ -13974,9 +13974,9 @@ async loadMoreProducts() {
 
         // 7. Tarik ulang data inventory dari database (paksa refresh agar UI reaktif)
         try {
-          await this.loadInventory({ force: true });
+          await withTimeout(this.loadInventory({ force: true }), 30000, 'loadInventory');
           if (typeof this.listenMenuItems === 'function') {
-            await this.listenMenuItems();
+            await withTimeout(this.listenMenuItems(), 30000, 'listenMenuItems');
           }
         } catch (e) {
           console.warn('[VOID] Gagal refresh inventory UI:', e);
@@ -13993,7 +13993,7 @@ async loadMoreProducts() {
         let hasHppJournal = false;
         let hppAmountFromJournal = 0;
         try {
-          const journalRes = await fetch(`/accounting/journal/${bulan}`);
+          const journalRes = await withTimeout(fetch(`/accounting/journal/${bulan}`), 15000, 'fetch journal');
           if (journalRes.ok) {
             const journalJson = await journalRes.json();
             if (journalJson && journalJson.success && Array.isArray(journalJson.data)) {
@@ -14023,7 +14023,7 @@ async loadMoreProducts() {
             } else if (hppAmount > 0) {
               console.log(`[VOID] Transaksi lama tidak punya jurnal HPP asli, melewati reversal HPP.`);
             }
-            await fetch(`/accounting/journal/${bulan}`, {
+            await withTimeout(fetch(`/accounting/journal/${bulan}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -14037,19 +14037,19 @@ async loadMoreProducts() {
                 customerId: existingData?.customerId || '',
                 lines: lines
               })
-            });
+            }), 15000, 'fetch journal POST');
           } catch (e) { console.warn('[VOID] Journal reversal note:', e); }
         }
         // 8.5. Paksa refresh data akuntansi agar Laporan Kasir sinkron setelah void
         this.accountingSummaryLastFetch = 0;
         if (typeof this.loadAccountingSummary === 'function') {
-          await this.loadAccountingSummary(true);
+          await withTimeout(this.loadAccountingSummary(true), 30000, 'loadAccountingSummary');
         }
         if (typeof this.loadLaporanHariIni === 'function') {
-          await this.loadLaporanHariIni();
+          await withTimeout(this.loadLaporanHariIni(), 30000, 'loadLaporanHariIni');
         }
         if (typeof this.loadCOAListFromBackend === 'function') {
-          await this.loadCOAListFromBackend();
+          await withTimeout(this.loadCOAListFromBackend(), 30000, 'loadCOAListFromBackend');
         }
 
       } catch (err) {
@@ -14081,6 +14081,20 @@ async loadMoreProducts() {
     }
   }
 });
+
+
+
+// Helper: Promise dengan timeout untuk operasi Firebase agar tidak hang selamanya
+function withTimeout(promise, ms = 30000, label = 'Firebase') {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).then(
+    (result) => { clearTimeout(timer); return result; },
+    (error) => { clearTimeout(timer); throw error; }
+  );
+}
 
 // Registrasi Komponen Alpine.js
 document.addEventListener('alpine:init', () => {
