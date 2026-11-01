@@ -2362,11 +2362,11 @@ async loadMoreProducts() {
     if (!tx) return;
 
     try {
-      const { jsPDF } = window.jspdf || {};
-      if (!jsPDF) {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
         this.showToast('Library PDF belum siap, tunggu sebentar.', 'error');
         return;
       }
+      const { jsPDF } = window.jspdf;
 
       // Ambil data transaksi
       const grandTotal = Number(tx.tot || tx.total || tx.amount) || 0;
