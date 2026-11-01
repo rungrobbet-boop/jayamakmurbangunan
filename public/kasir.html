@@ -2215,7 +2215,7 @@
                 <div class="pt-2 border-t border-stone-100">
                   <button 
                     type="button" 
-                    @click="openProductRecipeModal(menu)"
+                    @click="openProductRecipeModal(menu, true)"
                     :class="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'"
                     class="w-full min-h-[38px] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border shadow-2xs">
                     <i :class="(menuRecipes[menu.id]?.ingredients?.length || 0) > 0 ? 'fa-solid fa-pen-to-square text-emerald-700' : 'fa-solid fa-mortar-pestle text-amber-700'" class="text-[11px]"></i>
@@ -5656,7 +5656,9 @@
       </div>
 
       <!-- Form Informasi Produk (sesuai template CSV) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200">
+      <div
+  :class="isReadOnlyMode ? 'pointer-events-none opacity-60 select-none' : ''"
+  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200 transition-all">
         <div class="sm:col-span-3">
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Nama Produk *</label>
           <input
