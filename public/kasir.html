@@ -779,7 +779,6 @@
             <div class="flex items-center bg-stone-100 rounded-xl p-1 border border-stone-200">
               <button type="button" @click="viewMode = 'grid-large'" :class="viewMode === 'grid-large' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-700'" class="w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-table-cells-large"></i></button>
               <button type="button" @click="viewMode = 'grid-small'" :class="viewMode === 'grid-small' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-700'" class="w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-table-cells"></i></button>
-              <button type="button" @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-700'" class="w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-bars"></i></button>
             </div>
 
             <button
@@ -807,7 +806,6 @@
           <div class="flex items-center bg-stone-100 rounded-xl p-1 border border-stone-200">
             <button type="button" @click="viewMode = 'grid-large'" :class="viewMode === 'grid-large' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-700'" class="w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-table-cells-large"></i></button>
             <button type="button" @click="viewMode = 'grid-small'" :class="viewMode === 'grid-small' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-700'" class="w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-table-cells"></i></button>
-            <button type="button" @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-500 hover:text-stone-700'" class="w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-bars"></i></button>
           </div>
           <div class="relative flex-1 max-w-xl">
             <input
@@ -903,57 +901,14 @@
             <div 
               x-show="!isLoadingMenu" 
               :class="{
-                'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4': viewMode === 'grid-large',
-                'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3': viewMode === 'grid-small',
-                'flex flex-col gap-2': viewMode === 'list'
+                'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4': viewMode !== 'grid-small',
+                'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3': viewMode === 'grid-small'
               }">
               
               <template x-for="(menu, idx) in filteredMenuList()" :key="menu.id + '-' + idx">
-  <!-- ========================================== -->
-  <!-- MODE LIST (HAMBURGER) -->
-  <!-- ========================================== -->
-  <div x-show="viewMode === 'list'" 
+  <div 
        @click="addToCart(menu)"
-       class="bg-white rounded-2xl p-3 border border-stone-200 shadow-xs transition-all flex flex-row items-center gap-3 sm:gap-4 w-full cursor-pointer group">
-    
-    <!-- Kiri: Gambar -->
-    <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden bg-stone-100">
-      <img :src="(menu.imageUrl && menu.imageUrl.trim() !== '') ? menu.imageUrl : 'https://placehold.co/400x400?text=No+Image'" 
-           @error="$event.target.src='https://placehold.co/400x400?text=No+Image'" 
-           :alt="menu.name" class="w-full h-full object-cover" />
-      <span class="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-stone-950/80 text-[9px] font-bold text-emerald-400 border border-emerald-500/40 backdrop-blur-xs" 
-            x-text="getMenuDisplayStock(menu)"></span>
-    </div>
-
-    <!-- Tengah: Info Produk -->
-    <div class="flex-1 min-w-0 flex flex-col justify-center">
-      <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider" x-text="getCategoryName(menu.categoryId || menu.category)"></span>
-      <h4 class="font-bold text-sm text-stone-900 leading-tight truncate group-hover:text-emerald-700" x-text="menu.name"></h4>
-      <div class="flex flex-wrap items-baseline gap-x-2 mt-1">
-        <span class="text-sm font-black text-emerald-700 font-mono" x-text="formatRupiah(menu.priceEcer || menu.price)"></span>
-        <span class="text-[10px] text-stone-500" x-text="' / ' + (menu.unit || 'pcs')"></span>
-        <!-- Opsional: Tampilkan Harga Partai jika ada -->
-        <template x-if="menu.pricePartai > 0">
-          <span class="text-[10px] font-bold text-stone-400 font-mono" x-text="'Partai: ' + formatRupiah(menu.pricePartai)"></span>
-        </template>
-      </div>
-    </div>
-
-    <!-- Kanan: Tombol Tambah -->
-    <div class="flex-shrink-0 pr-1">
-      <button type="button" class="min-h-[40px] px-3 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center transition shadow-sm">
-        <i class="fa-solid fa-plus"></i>
-        <span class="hidden sm:inline">Tambah</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- MODE GRID (BESAR / KECIL) -->
-  <!-- ========================================== -->
-  <div x-show="viewMode !== 'list'" 
-       @click="addToCart(menu)"
-       class="bg-white rounded-2xl p-3 border border-stone-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer active:scale-98 select-none">
+       class="bg-white rounded-2xl p-3 border border-stone-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer active:scale-98 select-none">e-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer active:scale-98 select-none">
     
     <div class="space-y-2.5">
       <div class="aspect-square rounded-xl overflow-hidden bg-stone-100 relative">
@@ -1032,7 +987,7 @@
 </div>
 
           <!-- KOLOM KANAN (4 cols desktop, Sticky Top): Keranjang POS Kasir -->
-          <div class="x-cloak class="fixed inset-y-0 right-0 z-[9999] w-full max-w-md h-[100dvh] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:h-auto lg:max-w-none lg:w-auto lg:shadow-none lg:bg-transparent lg:transform-none lg:col-span-4" :class="showCartMobile ? 'translate-x-0' : 'translate-x-full lg:hidden'">
+          <div class="fixed inset-y-0 right-0 z-[9999] w-full max-w-md h-[100dvh] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:h-auto lg:max-w-none lg:w-auto lg:shadow-none lg:bg-transparent lg:transform-none lg:col-span-4" :class="showCartMobile ? 'translate-x-0' : 'translate-x-full lg:hidden'">
             <div class="bg-white rounded-3xl p-5 border border-stone-200 shadow-none flex flex-col space-y-4 pointer-events-auto h-full lg:h-[calc(100vh-140px)] lg:overflow-hidden">
               
               <!-- Header Keranjang: Judul + Hapus Semua (FIX FINAL) -->
