@@ -1273,24 +1273,27 @@
                   <span class="text-xs bg-emerald-700/80 px-2 py-0.5 rounded-md font-mono" x-text="formatRupiah(getCartGrandTotal())"></span>
                 </button>
 
-                <!-- Tombol [Simpan Draft] (Min h-12) -->
-                <button
-                  type="button"
-                  @click.stop="saveDraftOrder()"
-                  :disabled="cart.length === 0"
-                  class="w-full min-h-[48px] rounded-xl border border-stone-300 hover:bg-stone-100 disabled:opacity-50 text-stone-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
-                  <i class="fa-regular fa-bookmark text-stone-500"></i>
-                  <span>Simpan Sebagai Draft</span>
-                </button>
+                <!-- Tombol Draft Berdampingan -->
+                <div class="flex gap-2 mt-2">
+                  <!-- Tombol [Simpan Draft] -->
+                  <button
+                    type="button"
+                    @click.stop="saveDraftOrder()"
+                    :disabled="cart.length === 0"
+                    class="flex-1 min-h-[48px] rounded-xl border border-stone-300 hover:bg-stone-100 disabled:opacity-50 text-stone-700 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                    <i class="fa-regular fa-bookmark text-stone-500"></i>
+                    <span>Simpan Draft</span>
+                  </button>
 
-                <!-- Tombol [Daftar Draft] -->
-                <button
-                  type="button"
-                  @click="openDraftModal()"
-                  class="w-full min-h-[48px] rounded-xl border-2 border-blue-300 hover:bg-blue-50 disabled:opacity-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer">
-                  <i class="fa-solid fa-list text-blue-600"></i>
-                  <span>📋 Daftar Draft (<span x-text="drafts.length">0</span>)</span>
-                </button>
+                  <!-- Tombol [Daftar Draft] -->
+                  <button
+                    type="button"
+                    @click="openDraftModal()"
+                    class="flex-1 min-h-[48px] rounded-xl border-2 border-blue-300 hover:bg-blue-50 disabled:opacity-50 text-blue-700 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                    <i class="fa-solid fa-list text-blue-600"></i>
+                    <span>Daftar Draft (<span x-text="drafts.length">0</span>)</span>
+                  </button>
+                </div>
 
               </div>
 
