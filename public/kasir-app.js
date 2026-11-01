@@ -2357,6 +2357,171 @@ async loadMoreProducts() {
     return 'MyDigitalShop';
   },
 
+  // Fungsi Preview PDF Invoice (A5 Landscape) - untuk tombol "Preview" di transaksi kredit
+  async openInvoicePreview(tx) {
+    if (!tx) return;
+
+    try {
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) {
+        this.showToast('Library PDF belum siap, tunggu sebentar.', 'error');
+        return;
+      }
+
+      // Ambil data transaksi
+      const grandTotal = Number(tx.tot || tx.total || tx.amount) || 0;
+      let customer = null;
+      if (tx.customerId) {
+        customer = this.customerList?.find(c => String(c.id) === String(tx.customerId));
+      }
+      const customerName = customer?.name || tx.customerName || '-';
+      const customerPhone = customer?.phone || tx.customerPhone || '-';
+      const customerAddress = customer?.addressKirim || tx.customerAddress || '-';
+
+      const txDate = this.formatDate(tx.t);
+      const dueDate = tx.dueDate ? new Date(tx.dueDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+
+      const disc = Number(tx.disc || 0) || 0;
+      const tax = Number(tx.tax || 0) || 0;
+      const serviceCharge = Number(tx.serviceCharge || 0) || 0;
+      const subtotal = grandTotal - disc - tax - serviceCharge;
+
+      let itemSubtotal = 0;
+      let itemDiscTotal = 0;
+      (tx.items || []).forEach(item => {
+        const isArray = Array.isArray(item);
+        const qty = isArray ? item[1] : item.qty;
+        const basePrice = isArray ? item[2] : (item.basePrice || item.price || 0);
+        const itemDiscount = isArray ? 0 : (item.itemDiscount || 0);
+        itemSubtotal += (basePrice - itemDiscount) * qty;
+        itemDiscTotal += itemDiscount;
+      });
+
+      // Buat PDF Invoice (A5 Landscape)
+      const doc = new jsPDF('l', 'mm', 'a5');
+      const brandName = this.siteInfo?.brandName || 'MyDigitalShop';
+      const brandAddress = this.siteInfo?.address || 'Alamat Toko';
+      const brandPhone = this.siteInfo?.phone || '-';
+
+      // Header toko
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('INVOICE', 200, 15, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(brandName, 105, 20, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text((brandAddress || '') + ' | Telp: ' + (brandPhone || ''), 105, 24, { align: 'center' });
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(41, 37, 36);
+      doc.line(5, 28, 205, 28);
+
+      let y = 33;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+
+      // Info pelanggan
+      doc.text('Kepada Yth: ' + customerName, 10, y, { align: 'left' });
+      doc.text('No. HP: ' + customerPhone, 10, y + 5, { align: 'left' });
+      doc.text('Alamat Kirim: ' + customerAddress, 10, y + 10, { align: 'left' });
+
+      // Info transaksi (kanan)
+      doc.text('No. Invoice : ' + tx.id, 200, y, { align: 'right' });
+      doc.text('Tanggal     : ' + txDate, 200, y + 5, { align: 'right' });
+      doc.text('Jatuh Tempo : ' + dueDate, 200, y + 10, { align: 'right' });
+
+      y += 18;
+
+      // Tabel barang
+      const tableData = (tx.items || []).map((item, idx) => {
+        const isArray = Array.isArray(item);
+        const itemId = isArray ? item[0] : item.id;
+        const qty = isArray ? item[1] : item.qty;
+        const basePrice = isArray ? item[2] : (item.basePrice || item.price || 0);
+        const itemDiscount = isArray ? 0 : (item.itemDiscount || 0);
+        const itemTotal = (basePrice - itemDiscount) * qty;
+        const foundMenu = this.menuList.find(m => String(m.id) === String(itemId));
+        const itemName = foundMenu ? foundMenu.name : (isArray ? item[0] : item.name || itemId);
+
+        return [
+          String(idx + 1),
+          itemName,
+          String(qty),
+          itemDiscount > 0 ? this.formatRupiah(itemDiscount) : '-',
+          this.formatRupiah(basePrice),
+          this.formatRupiah(itemTotal)
+        ];
+      });
+
+      doc.autoTable({
+        startY: y,
+        head: [['No', 'Nama Barang', 'Qty', 'Diskon', 'Harga Satuan', 'Total']],
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 37, 36], textColor: 255 },
+        margin: { left: 10, right: 10 }
+      });
+
+      const finalY = doc.lastAutoTable.finalY + 10;
+
+      // Rincian biaya
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Subtotal', 140, finalY);
+      doc.text(this.formatRupiah(subtotal), 195, finalY, { align: 'right' });
+      finalY += 6;
+
+      if (itemDiscTotal > 0) {
+        doc.text('Diskon', 140, finalY);
+        doc.text('- ' + this.formatRupiah(itemDiscTotal), 195, finalY, { align: 'right' });
+        finalY += 6;
+      }
+      if (disc > 0) {
+        doc.text('Diskon Transaksi', 140, finalY);
+        doc.text('- ' + this.formatRupiah(disc), 195, finalY, { align: 'right' });
+        finalY += 6;
+      }
+      if (serviceCharge > 0) {
+        doc.text('Ongkir/Biaya', 140, finalY);
+        doc.text(this.formatRupiah(serviceCharge), 195, finalY, { align: 'right' });
+        finalY += 6;
+      }
+      if (tax > 0) {
+        doc.text('PPN', 140, finalY);
+        doc.text(this.formatRupiah(tax), 195, finalY, { align: 'right' });
+        finalY += 6;
+      }
+
+      // Total
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('TOTAL', 140, finalY + 2);
+      doc.text(this.formatRupiah(grandTotal), 195, finalY + 2, { align: 'right' });
+
+      // Footer
+      const footY = finalY + 12;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Terima kasih atas kepercayaan Anda.', 105, footY, { align: 'center' });
+
+      // Simpan sebagai blob URL untuk preview
+      const pdfBlobUrl = doc.output('bloburl');
+
+      if (pdfBlobUrl && typeof pdfBlobUrl === 'string') {
+        this.previewPdfUrl = pdfBlobUrl;
+        this.showPdfPreviewModal = true;
+      } else {
+        console.error('[PDF-PREVIEW] Gagal mendapatkan blobUrl.');
+        this.showToast('Gagal memuat preview PDF. Cek console.', 'error');
+      }
+    } catch (error) {
+      console.error('[PDF-PREVIEW] Exception saat generate PDF:', error);
+      this.showToast('Terjadi error saat membuat PDF', 'error');
+    }
+  },
+
   /**
    * Sinkronkan stok inventory kasir ke Firestore (collection 'inventory_sync').
    * Dipakai tombol "Sync Stok" di UI kasir. One-time write, tidak realtime.
@@ -4684,9 +4849,13 @@ async loadMoreProducts() {
     // Simpan Surat Jalan
     const sjBlobUrl = docSuratJalan.output('bloburl');
 
+    // Simpan Invoice dan Surat Jalan sebagai file PDF (download otomatis)
+    docInvoice.save('Invoice_' + tx.id + '.pdf');
+    docSuratJalan.save('SuratJalan_' + tx.id + '.pdf');
+
     this.previewPdfUrl = pdfBlobUrl;
     this.currentSJUrl = sjBlobUrl;
-    this.showToast('Invoice & Surat Jalan berhasil dibuat', 'success');
+    this.showToast('Invoice & Surat Jalan berhasil dibuat dan diunduh', 'success');
   },
 
   /** =========================================================================

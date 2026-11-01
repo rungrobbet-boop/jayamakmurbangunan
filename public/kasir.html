@@ -6886,11 +6886,11 @@
                 <button
                   type="button"
                   x-show="tx.isCredit || tx.pm === 'kredit'"
-                  @click="openPdfPreviewModal(tx)"
+                  @click="openInvoicePreview(tx)"
                   class="px-2.5 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 text-purple-700 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition"
-                  title="Preview File PDF">
-                  <i class="fa-solid fa-eye text-purple-600 text-xs"></i>
-                  <span>Preview</span>
+                  title="Preview Invoice PDF (A5)">
+                  <i class="fa-solid fa-file-pdf text-purple-600 text-xs"></i>
+                  <span>Preview PDF</span>
                 </button>
                 <!-- TOMBOL INVOICE KREDIT -->
                 <button
