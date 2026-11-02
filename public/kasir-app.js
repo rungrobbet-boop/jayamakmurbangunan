@@ -684,7 +684,7 @@ window.kasirApp = () => ({
       name: 'Prive Pemilik',
       category: 'prive',
       lines: [
-        { acc: '302', debit: 0, credit: 0, hint: 'Prive' },
+        { acc: '302', debit: 0, credit: 0, hint: 'Laba Ditahan' },
         { acc: '101', debit: 0, credit: 0, hint: 'Kas di Tangan' }
       ]
     },
@@ -11141,7 +11141,7 @@ async loadMoreProducts() {
           { code: '111', name: 'Akum. Penyusutan', type: 'Aset' },
           { code: '201', name: 'Hutang Supplier', type: 'Kewajiban' },
           { code: '301', name: 'Modal Pemilik', type: 'Ekuitas' },
-          { code: '302', name: 'Prive Pemilik', type: 'Ekuitas' },
+          { code: '302', name: 'Laba Ditahan', type: 'Ekuitas' },
           { code: '401', name: 'Pendapatan Penjualan', type: 'Pendapatan' },
           { code: '402', name: 'Pendapatan Catering', type: 'Pendapatan' },
           { code: '501', name: 'HPP Bahan Baku', type: 'HPP' },
@@ -11169,7 +11169,7 @@ async loadMoreProducts() {
         const map4to3 = {
           '1001': '101', '1002': '102', '1003': '103', '1004': '105', '1005': '106',
           '2001': '201', '2002': '202',
-          '3001': '301', '3002': '303', '3003': '302',
+          '3001': '301', '3002': '302', '3003': '303',
           '4001': '401', '4002': '402',
           '5001': '501',
           '6001': '601', '6002': '602', '6003': '603', '6004': '604', '6005': '605', '6006': '606'

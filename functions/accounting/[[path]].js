@@ -51,7 +51,8 @@ const DEFAULT_COA = {
   "111": { n: "Akum. Penyusutan", t: "asset" },
   "201": { n: "Hutang Supplier", t: "liability" },
   "301": { n: "Modal Pemilik", t: "equity" },
-  "302": { n: "Prive Pemilik", t: "equity" },
+  "302": { n: "Laba Ditahan", t: "equity" },
+  "303": { n: "Prive Pemilik", t: "equity" },
   "401": { n: "Pendapatan Penjualan", t: "revenue" },
   "402": { n: "Pendapatan Catering", t: "revenue" },
   "501": { n: "HPP Bahan Baku", t: "expense" },
@@ -161,7 +162,7 @@ const ACC_MAP_TO_4DIGIT = {
   // Kewajiban
   '201':'2001',  '202':'2002',
   // Ekuitas
-  '301':'3001',  '302':'3003',  '303':'3002',
+  '301':'3001',  '302':'3002',  '303':'3003',
   // Pendapatan
   '401':'4001',  '402':'4002',
   // HPP
@@ -396,7 +397,7 @@ async function applyLedgerDelta(dbUrl, bulan, deltas, apiKey, journalId) {
       const reverseMap = {
         '1001':'101', '1002':'102', '1003':'103', '1004':'105', '1005':'106',
         '2001':'201', '2002':'202',
-        '3001':'301', '3003':'302', '3002':'303',
+        '3001':'301', '3002':'302', '3003':'303',
         '4001':'401', '4002':'402',
         '5001':'501',
         '6001':'601', '6002':'602', '6003':'603',
