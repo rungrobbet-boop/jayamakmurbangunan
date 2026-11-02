@@ -10450,8 +10450,8 @@ async loadMoreProducts() {
       })
       .map(j => {
         const lines = Array.isArray(j.lines) ? j.lines : [];
-        const debitLine = lines.find(l => Number(l.debit) > 0);
-        const creditLine = lines.find(l => Number(l.credit) > 0);
+        const debitLines = lines.filter(l => Number(l.debit) > 0);
+        const creditLines = lines.filter(l => Number(l.credit) > 0);
         const totalDebit = lines.reduce((s, l) => s + (Number(l.debit) || 0), 0);
 
         return {
@@ -10459,14 +10459,18 @@ async loadMoreProducts() {
           id: j.id || j.entryId || j.ref || (j.date + '_' + String(j.desc || '').slice(0, 20)).replace(/\s/g, '_'),
           ref: j.noEntry || j.ref || j.entryId || '-',
           desc: j.desc || j.description || 'Transaksi Jurnal',
-          debitAccount: debitLine
-            ? (debitLine.acc || '-') + ' - ' + this.getAccountName(debitLine.acc)
+          debitAccount: debitLines.length
+            ? debitLines.map(l => (l.acc || '-') + ' - ' + this.getAccountName(l.acc)).join('<br>')
             : '-',
-          debitAmount: Number(debitLine?.debit) || 0,
-          creditAccount: creditLine
-            ? (creditLine.acc || '-') + ' - ' + this.getAccountName(creditLine.acc)
+          debitAmount: debitLines.length
+            ? debitLines.map(l => this.formatNumber(l.debit)).join('<br>')
+            : '0',
+          creditAccount: creditLines.length
+            ? creditLines.map(l => (l.acc || '-') + ' - ' + this.getAccountName(l.acc)).join('<br>')
             : '-',
-          creditAmount: Number(creditLine?.credit) || 0,
+          creditAmount: creditLines.length
+            ? creditLines.map(l => this.formatNumber(l.credit)).join('<br>')
+            : '0',
           totalAmount: totalDebit,
           status: j.status || 'approved'
         };
@@ -10601,7 +10605,7 @@ async loadMoreProducts() {
     '105': 'Persediaan Bahan Baku',
     '201': 'Hutang Supplier',
     '301': 'Modal Pemilik',
-    '302': 'Prive Pemilik',
+    '302': 'Laba Ditahan',
     '401': 'Pendapatan Penjualan',
     '402': 'Pendapatan Catering',
     '501': 'HPP',
