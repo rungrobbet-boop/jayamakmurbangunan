@@ -2897,16 +2897,25 @@ this.jurnalList.forEach(j => {
      * 6B. Laporan Arus Kas (Cash Flow)
      */
     async loadArusKas(bulan) {
-      let penerimaanPelanggan = 0;
-      let pembayaranSupplier = 0;
-      let pembayaranGaji = 0;
-      let pembayaranOperasional = 0;
+       let penerimaanPelanggan = 0;
+       let pembayaranSupplier = 0;
+       let pembayaranGaji = 0;
+       let pembayaranOperasional = 0;
 
-      let pembelianPeralatan = 0;
-      let setoranModal = 0;
-      let prive = 0;
+       let pembelianPeralatan = 0;
+       let setoranModal = 0;
+       let prive = 0;
 
-      const isKasOrBank = (code) => code === '101' || code === '102' || code === '101' || code === '102';
+       // ✅ Pastikan jurnal dimuat dari backend sebelum perhitungan
+       if (!this.jurnalList || this.jurnalList.length === 0) {
+         try {
+           await this.loadJournal(bulan);
+         } catch (e) {
+           console.warn('[ARUS-KAS] Gagal load jurnal:', e);
+         }
+       }
+
+       const isKasOrBank = (code) => code === '101' || code === '102';
 
       this.jurnalList.forEach(j => {
         const dAmt = Number(j.debitAmount) || 0;
