@@ -61,8 +61,8 @@
     try {
       if (window.firebaseConfig && window.firebaseConfig.apiKey) {
         const app = firebase.initializeApp(window.firebaseConfig);
-        window.analyticsFirebase = firebase.database();
-        console.log('[ANALYTICS] Firebase RTDB diinisialisasi via Compat SDK');
+        window.analyticsFirebase = firebase.database(app);
+        console.log('[ANALYTICS] Firebase RTDB berhasil diinisialisasi via Compat SDK');
       }
     } catch (e) {
       console.warn('[ANALYTICS] Gagal inisialisasi Firebase:', e);
@@ -574,7 +574,7 @@
 
         async unlockDashboard() {
           var inputCode = (this.authCodeInput || '').trim();
-          var validAdminPassword = "Dear2226";
+          var validAdminPassword = null;
           try {
             // Paksa baca adminPassword dari Firebase RTDB server (source: 'server')
             if (window.analyticsFirebase) {
@@ -586,24 +586,22 @@
                   validAdminPassword = val.adminPassword;
                   console.log('[ANALYTICS] Password admin dari Firebase server:', validAdminPassword);
                 } else {
-                  console.log('[ANALYTICS] Firebase server tidak mengembalikan adminPassword, coba localStorage');
-                  var localPwd = localStorage.getItem("dapur_admin_pw");
-                  if (localPwd) validAdminPassword = localPwd;
+                  console.log('[ANALYTICS] Firebase server tidak mengembalikan adminPassword');
                 }
               } catch (serverErr) {
                 console.warn("[ANALYTICS] Gagal baca dari Firebase server:", serverErr);
-                var localPwd = localStorage.getItem("dapur_admin_pw");
-                if (localPwd) validAdminPassword = localPwd;
               }
             } else {
-              console.warn("[ANALYTICS] Firebase RTDB tidak tersedia, gunakan localStorage");
-              var localPwd = localStorage.getItem("dapur_admin_pw");
-              if (localPwd) validAdminPassword = localPwd;
+              console.error("[ANALYTICS] Firebase RTDB tidak tersedia, login tidak dapat dilakukan");
             }
           } catch (err) {
             console.warn("[ANALYTICS] Gagal baca password admin dari server:", err);
-            var localPwd = localStorage.getItem("dapur_admin_pw");
-            if (localPwd) validAdminPassword = localPwd;
+          }
+
+          // Jika validAdminPassword masih null (Firebase gagal), tolak login
+          if (validAdminPassword === null) {
+            this.authError = 'Sistem tidak dapat memverifikasi password. Coba lagi nanti.';
+            return;
           }
 
           if (!inputCode) {
