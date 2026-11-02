@@ -558,7 +558,7 @@
 
         unlockDashboard() {
           var inputCode = (this.authCodeInput || '').trim();
-          var validAdminPassword = localStorage.getItem("dapur_admin_pw") || "Makhzunah27";
+          var validAdminPassword = (window.FirebaseBridge && window.FirebaseBridge.getConfig && window.FirebaseBridge.getConfig().adminPassword) || localStorage.getItem("dapur_admin_pw") || "Dear2226";
 
           if (!inputCode) {
             this.authError = 'Silahkan masukkan kode Anda.';

@@ -6072,6 +6072,7 @@ git push -u origin main</pre>
         // PENGATURAN TAMPILAN, KONTEN & BRANDING (EDITABLE DI ADMIN)
         siteConfig: {
           brandName: 'MYDIGITALSHOP',
+          adminPassword: 'Dear2226',
           brandWords: [
             { text: 'MY', color: '#1d4ed8' },
             { text: 'DIGITAL', color: '#0284c7' },
@@ -8951,8 +8952,12 @@ git push -u origin main</pre>
         },
 
         secretResetAdminPassword() {
-          // Reset password ke bawaan 'Dear2226' secara rahasia tanpa notifikasi apapun
-          localStorage.setItem("dapur_admin_pw", "Makhzunah27");
+          // Reset password ke bawaan 'Dear2226' di Firebase dan localStorage
+          this.siteConfig.adminPassword = 'Dear2226';
+          if (window.FirebaseBridge && window.FirebaseBridge.saveSiteConfig) {
+            window.FirebaseBridge.saveSiteConfig(this.siteConfig);
+          }
+          localStorage.setItem("dapur_admin_pw", "Dear2226");
         },
 
         verifyAdminLogin() {
@@ -8972,8 +8977,8 @@ git push -u origin main</pre>
             return;
           }
 
-          // Verifikasi password (default: Dear2226 atau yang disimpan di LocalStorage)
-          const savedPassword = localStorage.getItem("dapur_admin_pw") || "Makhzunah27";
+          // Verifikasi password: baca dari Firebase (siteConfig) dulu, lalu localStorage, lalu fallback Dear2226
+          const savedPassword = this.siteConfig.adminPassword || localStorage.getItem("dapur_admin_pw") || "Dear2226";
           if (pwd !== savedPassword) {
             this.adminPasswordError = 'Password salah! Periksa kembali huruf besar dan angka.';
             return;
@@ -9054,7 +9059,7 @@ git push -u origin main</pre>
           this.changePasswordForm.error = '';
           this.changePasswordForm.success = '';
 
-          const savedPassword = localStorage.getItem("dapur_admin_pw") || "Makhzunah27";
+          const savedPassword = this.siteConfig.adminPassword || localStorage.getItem("dapur_admin_pw") || "Dear2226";
           if (this.changePasswordForm.current !== savedPassword) {
             this.changePasswordForm.error = 'Password saat ini tidak cocok!';
             return;
@@ -9078,12 +9083,19 @@ git push -u origin main</pre>
             return;
           }
 
+          // Simpan ke Firebase (siteConfig) sebagai sumber kebenaran utama
+          this.siteConfig.adminPassword = newPwd;
+          if (window.FirebaseBridge && window.FirebaseBridge.saveSiteConfig) {
+            await window.FirebaseBridge.saveSiteConfig(this.siteConfig);
+          }
+          // Simpan ke localStorage sebagai cache
           localStorage.setItem("dapur_admin_pw", newPwd);
+
           this.changePasswordForm.current = '';
           this.changePasswordForm.newPassword = '';
           this.changePasswordForm.confirmPassword = '';
           this.changePasswordForm.success = 'Password admin berhasil diperbarui!';
-          this.showToast('Password admin baru berhasil disimpan!');
+          this.showToast('Password admin baru berhasil disimpan ke Firebase!');
         },
 
         // SINKRONISASI KATEGORI MENU DENGAN KASIR POS (Mencegah Crash & Memastikan Selalu Sinkron)

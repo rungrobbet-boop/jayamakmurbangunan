@@ -9738,7 +9738,7 @@ async loadMoreProducts() {
     }
 
     // Lapisan 2: Password Admin (baca dari localStorage, fallback 'admin123')
-    const adminPassword = localStorage.getItem('dapur_admin_pw') || 'Makhzunah27';
+    const adminPassword = this.siteConfig.adminPassword || localStorage.getItem('dapur_admin_pw') || 'Dear2226';
     if (String(this.genSaldoForm.password || '').trim() !== String(adminPassword).trim()) {
       return this.showToast('Password Admin salah!', 'error');
     }
