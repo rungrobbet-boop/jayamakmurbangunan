@@ -2965,7 +2965,11 @@ this.jurnalList.forEach(j => {
 
              // Kas/Bank KREDIT (Uang Keluar)
              if (isKasOrBank(acc) && lc > 0) {
-               if (opponentAcc === '501' || opponentAcc === '201' || opponentAcc === '105') {
+               // Void Penjualan: uang keluar karena pembatalan penjualan (Kredit Kas ← Debit Pendapatan)
+               if (opponentAcc === '401' || opponentAcc === '402') {
+                 penerimaanPelanggan -= lc;
+                 console.log(`[ARUS-KAS] Void Penjualan: kurangi penerimaanPelanggan idx=${idx} acc=${acc} opponent=${opponentAcc} amt=${lc}`);
+               } else if (opponentAcc === '501' || opponentAcc === '201' || opponentAcc === '105') {
                  pembayaranSupplier += lc;
                  console.log(`[ARUS-KAS] Keluar pembayaranSupplier idx=${idx} acc=${acc} opponent=${opponentAcc} amt=${lc}`);
                } else if (opponentAcc === '601') {
