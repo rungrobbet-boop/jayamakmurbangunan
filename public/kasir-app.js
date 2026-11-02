@@ -5380,12 +5380,11 @@ async loadMoreProducts() {
     }
 
     if (this.reportPeriod === 'week') {
-      // Minggu ini = Senin s/d hari ini
-      const day = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-      const diffToMonday = (day === 0 ? -6 : 1 - day);
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + diffToMonday);
-      return { start: fmt(monday), end: fmt(today) };
+      // Minggu ini = 7 hari terakhir termasuk hari ini
+      const end = new Date(today);
+      const start = new Date(today);
+      start.setDate(today.getDate() - 6);
+      return { start: fmt(start), end: fmt(end) };
     }
 
     if (this.reportPeriod === 'month') {
