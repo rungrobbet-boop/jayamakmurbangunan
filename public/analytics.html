@@ -577,11 +577,11 @@
           var inputCode = (this.authCodeInput || '').trim();
           var validAdminPassword = null;
           try {
-            // Paksa baca adminPassword dari Firebase RTDB server (source: 'server')
+            // Paksa baca adminPassword dari Firebase RTDB server
             if (window.analyticsFirebase) {
               try {
                 const configRef = window.analyticsFirebase.ref('site_config');
-                const snapshot = await window.analyticsFirebase.get(configRef, { source: 'server' });
+                const snapshot = await configRef.get();
                 const val = snapshot.val();
                 if (val && val.adminPassword) {
                   validAdminPassword = val.adminPassword;
