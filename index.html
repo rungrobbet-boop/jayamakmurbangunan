@@ -8977,42 +8977,8 @@ git push -u origin main</pre>
             return;
           }
 
-          // Verifikasi password: Paksa baca dari Firebase server (source: 'server') dulu,
-          // lalu fallback ke siteConfig (cache), lalu localStorage, lalu fallback Dear2226
-          let savedPassword = 'Dear2226';
-          try {
-            if (window.FirebaseBridge && window.FirebaseBridge.getAdminPasswordFromServer) {
-              const serverPassword = await window.FirebaseBridge.getAdminPasswordFromServer();
-              if (serverPassword) {
-                savedPassword = serverPassword;
-                console.log('[ADMIN-LOGIN] Password dibaca dari Firebase server:', savedPassword);
-              } else {
-                console.log('[ADMIN-LOGIN] Firebase server tidak mengembalikan adminPassword, gunakan fallback');
-              }
-            }
-          } catch (err) {
-            console.warn('[ADMIN-LOGIN] Gagal baca dari server:', err);
-          }
-
-          if (!savedPassword || savedPassword === 'Dear2226') {
-            // Fallback ke siteConfig.cache
-            const siteConfigPwd = this.siteConfig.adminPassword;
-            if (siteConfigPwd && siteConfigPwd !== 'Dear2226') {
-              savedPassword = siteConfigPwd;
-              console.log('[ADMIN-LOGIN] Password dari siteConfig cache:', savedPassword);
-            } else {
-              // Fallback ke localStorage
-              const localPwd = localStorage.getItem("dapur_admin_pw");
-              if (localPwd) {
-                savedPassword = localPwd;
-                console.log('[ADMIN-LOGIN] Password dari localStorage:', savedPassword);
-              } else {
-                savedPassword = 'Dear2226';
-                console.log('[ADMIN-LOGIN] Password fallback default: Dear2226');
-              }
-            }
-          }
-
+          // Verifikasi password: baca dari Firebase (siteConfig) dulu, lalu localStorage, lalu fallback Dear2226
+          const savedPassword = this.siteConfig.adminPassword || localStorage.getItem("dapur_admin_pw") || "Dear2226";
           if (pwd !== savedPassword) {
             this.adminPasswordError = 'Password salah! Periksa kembali huruf besar dan angka.';
             return;

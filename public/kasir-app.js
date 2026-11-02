@@ -9737,43 +9737,9 @@ async loadMoreProducts() {
       return this.showToast('PIN Supervisor salah!', 'error');
     }
 
-    // Lapisan 2: Password Admin (paksa baca dari Firebase server dulu, lalu siteConfig, lalu localStorage, fallback Dear2226)
-      let adminPassword = 'Dear2226';
-      try {
-        if (window.FirebaseBridge && window.FirebaseBridge.getAdminPasswordFromServer) {
-          const serverPassword = await window.FirebaseBridge.getAdminPasswordFromServer();
-          if (serverPassword) {
-            adminPassword = serverPassword;
-            console.log('[KASIR] Password admin dari Firebase server:', adminPassword);
-          } else {
-            const siteConfigPwd = this.siteConfig.adminPassword;
-            if (siteConfigPwd && siteConfigPwd !== 'Dear2226') {
-              adminPassword = siteConfigPwd;
-            } else {
-              const localPwd = localStorage.getItem('dapur_admin_pw');
-              if (localPwd) adminPassword = localPwd;
-            }
-          }
-        } else {
-          const siteConfigPwd = this.siteConfig.adminPassword;
-          if (siteConfigPwd && siteConfigPwd !== 'Dear2226') {
-            adminPassword = siteConfigPwd;
-          } else {
-            const localPwd = localStorage.getItem('dapur_admin_pw');
-            if (localPwd) adminPassword = localPwd;
-          }
-        }
-      } catch (err) {
-        console.warn('[KASIR] Gagal baca password admin dari server:', err);
-        const siteConfigPwd = this.siteConfig.adminPassword;
-        if (siteConfigPwd && siteConfigPwd !== 'Dear2226') {
-          adminPassword = siteConfigPwd;
-        } else {
-          const localPwd = localStorage.getItem('dapur_admin_pw');
-          if (localPwd) adminPassword = localPwd;
-        }
-      }
-      if (String(this.genSaldoForm.password || '').trim() !== String(adminPassword).trim()) {
+    // Lapisan 2: Password Admin (baca dari localStorage, fallback 'admin123')
+    const adminPassword = this.siteConfig.adminPassword || localStorage.getItem('dapur_admin_pw') || 'Dear2226';
+    if (String(this.genSaldoForm.password || '').trim() !== String(adminPassword).trim()) {
       return this.showToast('Password Admin salah!', 'error');
     }
 
