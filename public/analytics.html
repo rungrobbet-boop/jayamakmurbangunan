@@ -560,38 +560,34 @@
           var inputCode = (this.authCodeInput || '').trim();
           var validAdminPassword = "Dear2226";
           try {
-            if (window.FirebaseBridge && window.FirebaseBridge.getAdminPasswordFromServer) {
-              var serverPassword = await window.FirebaseBridge.getAdminPasswordFromServer();
-              if (serverPassword) {
-                validAdminPassword = serverPassword;
-                console.log('[ANALYTICS] Password admin dari Firebase server:', validAdminPassword);
-              } else {
-                var siteConfigPwd = window.FirebaseBridge.getConfig().adminPassword;
-                if (siteConfigPwd && siteConfigPwd !== "Dear2226") {
-                  validAdminPassword = siteConfigPwd;
+            // Paksa baca dari Firebase RTDB server (source: 'server')
+            if (window.analyticsFirebase && window.analyticsFirebase.rtdb && window.analyticsFirebase.ref && window.analyticsFirebase.get) {
+              try {
+                const configRef = window.analyticsFirebase.ref(window.analyticsFirebase.rtdb, 'site_config');
+                const snapshot = await window.analyticsFirebase.get(configRef, { source: 'server' });
+                const val = snapshot.val();
+                if (val && val.adminPassword) {
+                  validAdminPassword = val.adminPassword;
+                  console.log('[ANALYTICS] Password admin dari Firebase server:', validAdminPassword);
                 } else {
+                  console.log('[ANALYTICS] Firebase server tidak mengembalikan adminPassword, coba localStorage');
                   var localPwd = localStorage.getItem("dapur_admin_pw");
                   if (localPwd) validAdminPassword = localPwd;
                 }
+              } catch (serverErr) {
+                console.warn("[ANALYTICS] Gagal baca dari Firebase server:", serverErr);
+                var localPwd = localStorage.getItem("dapur_admin_pw");
+                if (localPwd) validAdminPassword = localPwd;
               }
             } else {
-              var siteConfigPwd2 = (window.FirebaseBridge && window.FirebaseBridge.getConfig && window.FirebaseBridge.getConfig().adminPassword) || "";
-              if (siteConfigPwd2 && siteConfigPwd2 !== "Dear2226") {
-                validAdminPassword = siteConfigPwd2;
-              } else {
-                var localPwd2 = localStorage.getItem("dapur_admin_pw");
-                if (localPwd2) validAdminPassword = localPwd2;
-              }
+              console.warn("[ANALYTICS] Firebase RTDB tidak tersedia, gunakan localStorage");
+              var localPwd = localStorage.getItem("dapur_admin_pw");
+              if (localPwd) validAdminPassword = localPwd;
             }
           } catch (err) {
             console.warn("[ANALYTICS] Gagal baca password admin dari server:", err);
-            var siteConfigPwd3 = (window.FirebaseBridge && window.FirebaseBridge.getConfig && window.FirebaseBridge.getConfig().adminPassword) || "";
-            if (siteConfigPwd3 && siteConfigPwd3 !== "Dear2226") {
-              validAdminPassword = siteConfigPwd3;
-            } else {
-              var localPwd3 = localStorage.getItem("dapur_admin_pw");
-              if (localPwd3) validAdminPassword = localPwd3;
-            }
+            var localPwd = localStorage.getItem("dapur_admin_pw");
+            if (localPwd) validAdminPassword = localPwd;
           }
 
           if (!inputCode) {
