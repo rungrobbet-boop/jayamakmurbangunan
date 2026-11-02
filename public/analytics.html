@@ -55,12 +55,12 @@
   <!-- Firebase Compat SDK via CDN (untuk halaman statis analytics.html) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-  <script type="module" src="/firebase-config.js"></script>
-  <script>
+  <script type="module">
+    import { firebaseConfig } from '/firebase-config.js';
     try {
-      if (window.firebaseConfig && window.firebase) {
-        const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(window.firebaseConfig);
-        window.analyticsFirebase = firebase.database(app);
+      if (window.firebase && firebaseConfig && firebaseConfig.apiKey) {
+        const app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(firebaseConfig);
+        window.analyticsFirebase = window.firebase.database(app);
         console.log("🔥 [ANALYTICS] RTDB BERHASIL DIBUAT:", window.analyticsFirebase);
       } else {
         console.error("❌ [ANALYTICS] Gagal: firebaseConfig atau firebase SDK tidak ada.");
