@@ -160,7 +160,7 @@ window.accountingApp = function() {
     mobileMenuOpen: false,
     siteName: '',  // fallback, akan di-load dari site_config/brandName
         // ✅ PIN Accounting gate
-    supervisorPin: '211211',          // default, overwrite dari Firebase saat init
+    supervisorPin: '121223',          // default, overwrite dari Firebase saat init
     showFinancePinModal: false,       // modal PIN aktif
     financePinInput: '',
     financePinError: '',
@@ -421,7 +421,7 @@ window.accountingApp = function() {
               console.log('[ACCT-APP] ✅ PIN loaded from Firebase:', this.supervisorPin.slice(0,2) + '****');
             }
           } else {
-            console.warn('[ACCT-APP] PIN fetch failed:', res.status, '— pakai fallback 211211');
+            console.warn('[ACCT-APP] PIN fetch failed:', res.status, '— pakai fallback 121223');
           }
         }
       } catch (e) {
@@ -440,7 +440,7 @@ window.accountingApp = function() {
         this.financePinError = '⚠️ PIN harus 6 digit';
         return;
       }
-      const validPin = String(this.supervisorPin || '211211').trim();
+      const validPin = String(this.supervisorPin || '121223').trim();
       if (pin !== validPin) {
         this.financePinError = '❌ PIN salah. Coba lagi.';
         this.financePinInput = '';
@@ -488,7 +488,7 @@ window.accountingApp = function() {
         this.pinErrorMessage = '⚠️ PIN harus 6 digit angka';
         return;
       }
-      const validPin = String(this.supervisorPin || '211211').trim();
+      const validPin = String(this.supervisorPin || '121223').trim();
       if (pin === validPin) {
         try {
           sessionStorage.setItem('dapur_pin_verified_until', String(Date.now() + 15 * 60 * 1000));

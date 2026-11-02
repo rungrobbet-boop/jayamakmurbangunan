@@ -331,7 +331,7 @@ window.kasirApp = () => ({
   qrisOrderId: '',
   qrisDisplayMode: 'dynamic', // 'dynamic' | 'static'
    // 🔒 Supervisor PIN Security State
-  supervisorPin: '211211',
+  supervisorPin: '121223',
          // 📊 Range Filter State untuk Laporan
         reportPeriod: 'today',      // 'today' | 'week' | 'month' | 'custom'
         reportStartDate: '',         // untuk custom (YYYY-MM-DD)
