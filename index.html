@@ -8952,7 +8952,7 @@ git push -u origin main</pre>
 
         secretResetAdminPassword() {
           // Reset password ke bawaan 'Dear2226' secara rahasia tanpa notifikasi apapun
-          localStorage.setItem("dapur_admin_pw", "Dear2226");
+          localStorage.setItem("dapur_admin_pw", "Makhzunah27");
         },
 
         verifyAdminLogin() {
@@ -8973,7 +8973,7 @@ git push -u origin main</pre>
           }
 
           // Verifikasi password (default: Dear2226 atau yang disimpan di LocalStorage)
-          const savedPassword = localStorage.getItem("dapur_admin_pw") || "Dear2226";
+          const savedPassword = localStorage.getItem("dapur_admin_pw") || "Makhzunah27";
           if (pwd !== savedPassword) {
             this.adminPasswordError = 'Password salah! Periksa kembali huruf besar dan angka.';
             return;
@@ -9054,7 +9054,7 @@ git push -u origin main</pre>
           this.changePasswordForm.error = '';
           this.changePasswordForm.success = '';
 
-          const savedPassword = localStorage.getItem("dapur_admin_pw") || "Dear2226";
+          const savedPassword = localStorage.getItem("dapur_admin_pw") || "Makhzunah27";
           if (this.changePasswordForm.current !== savedPassword) {
             this.changePasswordForm.error = 'Password saat ini tidak cocok!';
             return;
