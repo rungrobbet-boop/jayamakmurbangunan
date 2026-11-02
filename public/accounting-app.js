@@ -2915,65 +2915,126 @@ this.jurnalList.forEach(j => {
          }
        }
 
-       const isKasOrBank = (code) => code === '101' || code === '102';
+       console.log('[ARUS-KAS] Jumlah jurnal yang diproses:', this.jurnalList ? this.jurnalList.length : 0);
+       console.log('[ARUS-KAS] Data jurnal mentah:', this.jurnalList);
 
-      this.jurnalList.forEach(j => {
-        const dAmt = Number(j.debitAmount) || 0;
-        const cAmt = Number(j.creditAmount) || 0;
+       // Helper: mapping kode akun 4-digit (Firebase) → 3-digit (UI)
+       const to3Digit = (code) => {
+         const c = String(code || '').trim();
+         const map4to3 = {
+           '1001': '101', '1002': '102', '1003': '103', '1004': '105', '1005': '106',
+           '2001': '201', '2002': '202',
+           '3001': '301', '3002': '303', '3003': '302',
+           '4001': '401', '4002': '402',
+           '5001': '501',
+           '6001': '601', '6002': '602', '6003': '603', '6004': '604', '6005': '605', '6006': '606'
+         };
+         return map4to3[c] || c;
+       };
 
-        // Arus Kas Masuk (DEBIT Kas / Bank)
-        if (isKasOrBank(j.debitCode)) {
-          if (j.creditCode === '401' || j.creditCode === '402' || j.creditCode === '103' || j.creditCode === '401' || j.creditCode === '402' || j.creditCode === '103') {
-            penerimaanPelanggan += dAmt;
-          } else if (j.creditCode === '301' || j.creditCode === '301') {
-            setoranModal += dAmt;
-          }
-        }
+       const isKasOrBank = (code) => {
+         const c = to3Digit(code);
+         return c === '101' || c === '102';
+       };
 
-        // Arus Kas Keluar (KREDIT Kas / Bank)
-        if (isKasOrBank(j.creditCode)) {
-          if (j.debitCode === '501' || j.debitCode === '201' || j.debitCode === '105' || j.debitCode === '501' || j.debitCode === '201' || j.debitCode === '105') {
-            pembayaranSupplier += cAmt;
-          } else if (j.debitCode === '601' || j.debitCode === '601') {
-            pembayaranGaji += cAmt;
-          } else if (j.debitCode === '602' || j.debitCode === '603' || j.debitCode === '604' || j.debitCode === '605' ||
-                     j.debitCode === '602' || j.debitCode === '603' || j.debitCode === '604' || j.debitCode === '605') {
-            pembayaranOperasional += cAmt;
-          } else if (j.debitCode === '106' || j.debitCode === '106') {
-            pembelianPeralatan += cAmt;
-          } else if (j.debitCode === '303') {
-            prive += cAmt;
-          }
-        }
-      });
+       this.jurnalList.forEach((j, idx) => {
+         // Struktur baru: j.lines = [{acc, debit, credit}, ...]
+         if (Array.isArray(j.lines)) {
+           j.lines.forEach(l => {
+             const acc = to3Digit(l.acc || l.code || '');
+             const ld = Number(l.debit) || 0;
+             const lc = Number(l.credit) || 0;
+             if (!acc) return;
 
-      const kasBersihOperasi = penerimaanPelanggan - (pembayaranSupplier + pembayaranGaji + pembayaranOperasional);
-      const kasBersihInvestasi = -pembelianPeralatan;
-      const kasBersihPendanaan = setoranModal - prive;
-      const kenaikanKas = kasBersihOperasi + kasBersihInvestasi + kasBersihPendanaan;
+             // Kas/Bank DEBIT (masuk) dipasangkan dengan Pendapatan (401/402)
+             if (isKasOrBank(acc) && ld > 0) {
+               const creditAcc = to3Digit(l.creditAcc || l.creditCode || '');
+               if (creditAcc === '401' || creditAcc === '402') penerimaanPelanggan += ld;
+               else if (creditAcc === '301') setoranModal += ld;
+             }
+             // Kas/Bank KREDIT (keluar) dipasangkan dengan HPP/Beban/Aset/Prive
+             if (isKasOrBank(acc) && lc > 0) {
+               const debitAcc = to3Digit(l.debitAcc || l.debitCode || '');
+               if (debitAcc === '501' || debitAcc === '201' || debitAcc === '105') pembayaranSupplier += lc;
+               else if (debitAcc === '601') pembayaranGaji += lc;
+               else if (['602','603','604','605','606'].includes(debitAcc)) pembayaranOperasional += lc;
+               else if (debitAcc === '106') pembelianPeralatan += lc;
+               else if (debitAcc === '303') prive += lc;
+             }
+           });
+           return;
+         }
 
-      const kasAwal = ((this.coaList.find(c => c.code === '101' || c.code === '101') || {}).initialBalance || 0) +
-                      ((this.coaList.find(c => c.code === '102' || c.code === '102') || {}).initialBalance || 0);
-      const kasAkhir = kasAwal + kenaikanKas;
+         // Struktur lama: debitCode/creditCode + debitAmount/creditAmount
+         const dAmt = Number(j.debitAmount) || 0;
+         const cAmt = Number(j.creditAmount) || 0;
+         const debitCode = to3Digit(j.debitCode);
+         const creditCode = to3Digit(j.creditCode);
 
-      this.laporanData.cashFlow = {
-        penerimaanPelanggan,
-        pembayaranSupplier,
-        pembayaranGaji,
-        pembayaranOperasional,
-        kasBersihOperasi,
-        pembelianPeralatan,
-        kasBersihInvestasi,
-        setoranModal,
-        prive,
-        kasBersihPendanaan,
-        kenaikanKas,
-        kasAwal,
-        kasAkhir
-      };
+         // Arus Kas Masuk (DEBIT Kas / Bank)
+         if (isKasOrBank(debitCode) && dAmt > 0) {
+           if (creditCode === '401' || creditCode === '402' || creditCode === '103') {
+             penerimaanPelanggan += dAmt;
+             console.log(`[ARUS-KAS] Masuk penerimaanPelanggan idx=${idx} acc=${debitCode} amt=${dAmt}`);
+           } else if (creditCode === '301') {
+             setoranModal += dAmt;
+           }
+         }
 
-      return this.laporanData.cashFlow;
-    },
+         // Arus Kas Keluar (KREDIT Kas / Bank)
+         if (isKasOrBank(creditCode) && cAmt > 0) {
+           if (debitCode === '501' || debitCode === '201' || debitCode === '105') {
+             pembayaranSupplier += cAmt;
+             console.log(`[ARUS-KAS] Keluar pembayaranSupplier idx=${idx} acc=${creditCode} amt=${cAmt}`);
+           } else if (debitCode === '601') {
+             pembayaranGaji += cAmt;
+           } else if (['602','603','604','605','606'].includes(debitCode)) {
+             pembayaranOperasional += cAmt;
+           } else if (debitCode === '106') {
+             pembelianPeralatan += cAmt;
+           } else if (debitCode === '303') {
+             prive += cAmt;
+           }
+         }
+       });
+
+       console.log('[ARUS-KAS] Hasil perhitungan:', {
+         penerimaanPelanggan,
+         pembayaranSupplier,
+         pembayaranGaji,
+         pembayaranOperasional,
+         pembelianPeralatan,
+         setoranModal,
+         prive
+       });
+
+       const kasBersihOperasi = penerimaanPelanggan - (pembayaranSupplier + pembayaranGaji + pembayaranOperasional);
+       const kasBersihInvestasi = -pembelianPeralatan;
+       const kasBersihPendanaan = setoranModal - prive;
+       const kenaikanKas = kasBersihOperasi + kasBersihInvestasi + kasBersihPendanaan;
+
+       const kasAwal = ((this.coaList.find(c => c.code === '101' || c.code === '101') || {}).initialBalance || 0) +
+                       ((this.coaList.find(c => c.code === '102' || c.code === '102') || {}).initialBalance || 0);
+       const kasAkhir = kasAwal + kenaikanKas;
+
+       this.laporanData.cashFlow = {
+         penerimaanPelanggan,
+         pembayaranSupplier,
+         pembayaranGaji,
+         pembayaranOperasional,
+         kasBersihOperasi,
+         pembelianPeralatan,
+         kasBersihInvestasi,
+         setoranModal,
+         prive,
+         kasBersihPendanaan,
+         kenaikanKas,
+         kasAwal,
+         kasAkhir
+       };
+
+       return this.laporanData.cashFlow;
+     },
 
     /**
      * 6C. Laporan Neraca (Balance Sheet - Aset = Kewajiban + Ekuitas)
