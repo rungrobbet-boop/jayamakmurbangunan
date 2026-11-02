@@ -255,6 +255,25 @@
           throw err;
         }
       },
+
+      // Paksa baca adminPassword dari Firebase server (bypass cache lokal)
+      getAdminPasswordFromServer: async () => {
+        if (!db) return null;
+        try {
+          const { get } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-rtdb.js");
+          const configRef = ref(db, 'site_config');
+          const snapshot = await get(configRef, { source: 'server' });
+          const val = snapshot.val();
+          if (val && val.adminPassword) {
+            return val.adminPassword;
+          }
+          return null;
+        } catch (err) {
+          console.warn("Firebase getAdminPasswordFromServer error:", err);
+          return null;
+        }
+      },
+
       listenSiteConfig: (callback) => {
         if (db) {
           const configRef = ref(db, 'site_config');
