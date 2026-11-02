@@ -1812,14 +1812,14 @@ async loadMoreProducts() {
         this.menuList = Array.from(seen.values());
         console.log(`[FB-FS] Loaded ${this.menuList.length} unique products`);
       } else {
-        this.menuList = []; // Tidak ada fallback makanan — kosongkan jika Firestore kosong
+        this.menuList = []; // Tidak ada fallback data — kosongkan jika Firestore kosong
       }
       this.syncCategoriesWithMainStore();
       this.isLoadingMenu = false;
     } catch (e) {
       clearTimeout(menuTimeout);
       console.warn('Menu listener setup exception:', e);
-      this.menuList = []; // Tidak ada fallback makanan
+      this.menuList = []; // Tidak ada fallback data
       this.isLoadingMenu = false;
     }
 

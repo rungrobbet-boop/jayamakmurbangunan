@@ -44,7 +44,7 @@
 
 ## 🔐 Alur Autentikasi Pelanggan (Firebase Anonymous Auth)
 
-Untuk mempermudah konversi penjualan UMKM, pelanggan tidak boleh dipaksa mengisi formulir login password yang panjang saat hendak memesan makanan lapar.
+Untuk mempermudah konversi penjualan UMKM, pelanggan tidak boleh dipaksa mengisi formulir login password yang panjang saat hendak memesan barang.
 
 ### Cara Kerja:
 1. Saat halaman `index.html` dibuka, script memanggil `signInAnonymously(auth)`.
