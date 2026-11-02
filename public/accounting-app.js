@@ -2946,23 +2946,40 @@ this.jurnalList.forEach(j => {
              const lc = Number(l.credit) || 0;
              if (!acc) return;
 
-             // Kas/Bank DEBIT (masuk) dipasangkan dengan Pendapatan (401/402)
-             if (isKasOrBank(acc) && ld > 0) {
-               const creditAcc = to3Digit(l.creditAcc || l.creditCode || '');
-               if (creditAcc === '401' || creditAcc === '402') penerimaanPelanggan += ld;
-               else if (creditAcc === '301') setoranModal += ld;
+             // Cari akun lawan (baris lain di dalam jurnal yang sama)
+             let opponentAcc = '';
+             const opponentLine = j.lines.find(otherLine => otherLine !== l);
+             if (opponentLine) {
+               opponentAcc = to3Digit(opponentLine.acc || opponentLine.code || '');
              }
-             // Kas/Bank KREDIT (keluar) dipasangkan dengan HPP/Beban/Aset/Prive
+
+             // Kas/Bank DEBIT (Uang Masuk)
+             if (isKasOrBank(acc) && ld > 0) {
+               if (opponentAcc === '401' || opponentAcc === '402' || opponentAcc === '103') {
+                 penerimaanPelanggan += ld;
+                 console.log(`[ARUS-KAS] Masuk penerimaanPelanggan idx=${idx} acc=${acc} opponent=${opponentAcc} amt=${ld}`);
+               } else if (opponentAcc === '301') {
+                 setoranModal += ld;
+               }
+             }
+
+             // Kas/Bank KREDIT (Uang Keluar)
              if (isKasOrBank(acc) && lc > 0) {
-               const debitAcc = to3Digit(l.debitAcc || l.debitCode || '');
-               if (debitAcc === '501' || debitAcc === '201' || debitAcc === '105') pembayaranSupplier += lc;
-               else if (debitAcc === '601') pembayaranGaji += lc;
-               else if (['602','603','604','605','606'].includes(debitAcc)) pembayaranOperasional += lc;
-               else if (debitAcc === '106') pembelianPeralatan += lc;
-               else if (debitAcc === '303') prive += lc;
+               if (opponentAcc === '501' || opponentAcc === '201' || opponentAcc === '105') {
+                 pembayaranSupplier += lc;
+                 console.log(`[ARUS-KAS] Keluar pembayaranSupplier idx=${idx} acc=${acc} opponent=${opponentAcc} amt=${lc}`);
+               } else if (opponentAcc === '601') {
+                 pembayaranGaji += lc;
+               } else if (['602','603','604','605','606'].includes(opponentAcc)) {
+                 pembayaranOperasional += lc;
+               } else if (opponentAcc === '106') {
+                 pembelianPeralatan += lc;
+               } else if (opponentAcc === '303') {
+                 prive += lc;
+               }
              }
            });
-           return;
+           return; // Lanjut ke jurnal berikutnya
          }
 
          // Struktur lama: debitCode/creditCode + debitAmount/creditAmount
