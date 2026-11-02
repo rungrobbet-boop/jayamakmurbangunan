@@ -779,7 +779,7 @@
               </div>
 
               <!-- Stock Indicator -->
-              <div x-if="siteConfig.showMenuStockOnMain && getMenuItemStock(item).stock > 0" class="absolute top-2 left-2 z-10">
+              <div x-show="siteConfig.showMenuStockOnMain && getMenuItemStock(item).stock > 0" class="absolute top-2 left-2 z-10">
                 <span
                   :class="getMenuItemStock(item).stock === 0 ? 'bg-red-600 text-white' : 'bg-white/95 text-slate-800 border border-stone-200'"
                   class="px-2 py-0.5 text-[10px] font-bold shadow-xs rounded-full backdrop-blur-sm"
