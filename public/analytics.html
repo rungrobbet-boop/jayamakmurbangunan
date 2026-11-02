@@ -556,12 +556,12 @@
           clearTimeout(this.inactivityTimer);
         },
 
-        unlockDashboard() {
+        async unlockDashboard() {
           var inputCode = (this.authCodeInput || '').trim();
           var validAdminPassword = "Dear2226";
           try {
             if (window.FirebaseBridge && window.FirebaseBridge.getAdminPasswordFromServer) {
-              var serverPassword = window.FirebaseBridge.getAdminPasswordFromServer();
+              var serverPassword = await window.FirebaseBridge.getAdminPasswordFromServer();
               if (serverPassword) {
                 validAdminPassword = serverPassword;
                 console.log('[ANALYTICS] Password admin dari Firebase server:', validAdminPassword);

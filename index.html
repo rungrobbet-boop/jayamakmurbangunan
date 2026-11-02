@@ -8960,7 +8960,7 @@ git push -u origin main</pre>
           localStorage.setItem("dapur_admin_pw", "Dear2226");
         },
 
-        verifyAdminLogin() {
+        async verifyAdminLogin() {
           const pwd = (this.adminPasswordInput || '').trim();
 
           // Validasi keamanan: minimal 8 digit, kombinasi huruf & angka, minimal 1 huruf kapital
@@ -8983,7 +8983,7 @@ git push -u origin main</pre>
           let savedPassword = 'Dear2226';
           try {
             if (window.FirebaseBridge && window.FirebaseBridge.getAdminPasswordFromServer) {
-              const serverPassword = window.FirebaseBridge.getAdminPasswordFromServer();
+              const serverPassword = await window.FirebaseBridge.getAdminPasswordFromServer();
               if (serverPassword) {
                 savedPassword = serverPassword;
                 console.log('[ADMIN-LOGIN] Password dibaca dari Firebase server:', savedPassword);
