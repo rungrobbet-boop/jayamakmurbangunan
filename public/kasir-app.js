@@ -1016,6 +1016,12 @@ try {
         } else if (val === 'orderonline') {
           // ==== RTO (BLOK BARU): refresh queue order online ====
           this.loadOrderOnline();
+        } else if (val === 'akuntansi') {
+          // Saat tab Akuntansi dibuka, segarkan data dari Firebase
+          this.$nextTick(async () => {
+            await this.loadJournalListForKasir();
+            await this.loadCOAListFromBackend();
+          });
         }
       });
     }
@@ -11145,13 +11151,27 @@ async loadMoreProducts() {
       }
 
       // ============================================================
-      // 2. ✅ FIX: Fetch ALL ledger dari Firebase REST API
+      // 2. ✅ Fix: Fetch ALL ledger dari Firebase REST API dengan konversi 4-digit → 3-digit
       //    STRUKTUR: /accounting/ledger/{accCode}/{bulan}
       //    Jadi fetch .json TANPA bulan, dapat semua akun
       // ============================================================
       const fbUrl = (this._fbConfig && this._fbConfig.databaseURL)
         || '';
       const saldoMap = {};
+
+      // Helper: konversi kode akun 4-digit (Firebase) → 3-digit (UI)
+      const to3Digit = (code) => {
+        const c = String(code || '').trim();
+        const map4to3 = {
+          '1001': '101', '1002': '102', '1003': '103', '1004': '105', '1005': '106',
+          '2001': '201', '2002': '202',
+          '3001': '301', '3002': '303', '3003': '302',
+          '4001': '401', '4002': '402',
+          '5001': '501',
+          '6001': '601', '6002': '602', '6003': '603', '6004': '604', '6005': '605', '6006': '606'
+        };
+        return map4to3[c] || c;
+      };
 
       try {
         const ledgerRes = await fetch(`${fbUrl.replace(/\/$/, '')}/accounting/ledger.json`);
@@ -11169,7 +11189,8 @@ async loadMoreProducts() {
                 const d = Number(monthData.debit) || 0;
                 const c = Number(monthData.credit) || 0;
                 // Prioritas: closing, fallback: debit - credit
-                saldoMap[String(accCode)] = isNaN(closing) ? (d - c) : closing;
+                const canonAcc = to3Digit(accCode); // ✅ KONVERSI 4-digit → 3-digit
+                saldoMap[canonAcc] = isNaN(closing) ? (d - c) : closing;
               }
             });
           }
@@ -11192,7 +11213,7 @@ async loadMoreProducts() {
       // ============================================================
       list.forEach(item => {
         const rawCode = String(item.code || '').trim();
-        const canonCode = rawCode; // ledger sudah 3-digit, langsung cocok
+        const canonCode = to3Digit(rawCode); // ✅ Gunakan to3Digit untuk konsistensi
 
         // Kalau saldo dari backend COA kosong/0, override dengan ledger
         if (item.saldo === null || item.saldo === undefined || Number(item.saldo) === 0) {
