@@ -57,15 +57,16 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script type="module" src="/firebase-config.js"></script>
   <script>
-    // Inisialisasi Firebase Compat SDK untuk baca adminPassword dari server
     try {
-      if (window.firebaseConfig && window.firebaseConfig.apiKey) {
-        const app = firebase.initializeApp(window.firebaseConfig);
+      if (window.firebaseConfig && window.firebase) {
+        const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(window.firebaseConfig);
         window.analyticsFirebase = firebase.database(app);
-        console.log('[ANALYTICS] Firebase RTDB berhasil diinisialisasi via Compat SDK');
+        console.log("🔥 [ANALYTICS] RTDB BERHASIL DIBUAT:", window.analyticsFirebase);
+      } else {
+        console.error("❌ [ANALYTICS] Gagal: firebaseConfig atau firebase SDK tidak ada.");
       }
-    } catch (e) {
-      console.warn('[ANALYTICS] Gagal inisialisasi Firebase:', e);
+    } catch (err) {
+      console.error("❌ [ANALYTICS] Error Inisialisasi RTDB:", err);
     }
   </script>
 
