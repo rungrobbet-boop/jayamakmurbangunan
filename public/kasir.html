@@ -492,7 +492,7 @@
         :class="activeTab === 'inventory' && inventoryTab === 'pembelian' ? 'bg-emerald-600 text-white font-bold' : 'text-stone-700 hover:bg-stone-100'"
         class="w-full min-h-[48px] px-3.5 rounded-xl flex items-center gap-3 text-sm transition text-left cursor-pointer">
         <i class="fa-solid fa-truck-ramp-box w-5 text-center"></i>
-        <span>Pembelian Bahan</span>
+        <span>Pembelian</span>
       </button>
 
       <button 
@@ -1959,13 +1959,13 @@
       <!-- ═══════════════════════════════════════════════════════════════════ -->
       <section x-show="activeTab === 'inventory'" x-cloak class="space-y-6">
         
-        <!-- Header Inventory: Search + Tombol Aksi Produk & Bahan Baku -->
+        <!-- Header Inventory: Search + Tombol Aksi Produk & Barang -->
         <div class="bg-white rounded-3xl p-4 sm:p-6 border border-stone-200 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           <div class="relative w-full sm:w-80">
             <input :disabled="isReadOnlyMode" 
               type="text" 
               x-model="inventorySearch"
-              placeholder="Cari bahan bangunan, produk siap jual..." 
+              placeholder="Cari barang, produk siap jual..." 
               class="w-full min-h-[48px] pl-11 pr-4 rounded-xl border border-stone-300 bg-stone-50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500" 
             />
             <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400">
@@ -1982,7 +1982,7 @@
                 :class="(inventoryTab || 'ingredients') === 'ingredients' ? 'bg-white text-stone-900 font-black shadow-xs' : 'text-stone-500 font-semibold'"
                 class="px-3 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-layer-group text-[10px]"></i>
-                <span>Bahan Baku / Item</span>
+                <span>Barang / Item</span>
               </button>
               <button 
                 type="button" 
@@ -1990,7 +1990,7 @@
                 :class="inventoryTab === 'products' ? 'bg-white text-stone-900 font-black shadow-xs' : 'text-stone-500 font-semibold'"
                 class="px-3 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-box text-[10px]"></i>
-                <span>Produk Menu &amp; Resep</span>
+                <span>Produk</span>
               </button>
               <button 
                 type="button" 
@@ -1998,7 +1998,7 @@
                 :class="inventoryTab === 'pembelian' ? 'bg-white text-stone-900 font-black shadow-xs' : 'text-stone-500 font-semibold'"
                 class="px-3 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fa-solid fa-truck-ramp-box text-[10px] text-emerald-600"></i>
-                <span>Pembelian Bahan</span>
+                <span>Pembelian</span>
               </button>
               <button 
                 type="button" 

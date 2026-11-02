@@ -3805,12 +3805,12 @@ this.jurnalList.forEach(j => {
       y = line('Kas di Tangan', bs.kas, { indent: 6 });
       y = line('Kas di Bank', bs.bank, { indent: 6 });
       y = line('Piutang Usaha', bs.piutang, { indent: 6 });
-      y = line('Persediaan Bahan Baku', bs.persediaan, { indent: 6 });
+      y = line('Persediaan', bs.persediaan, { indent: 6 });
       y = line('Total Aset Lancar', bs.totalAsetLancar, { indent: 6, bold: true });
       y += 3;
       doc.setFont('helvetica', 'bold');
       doc.text('Aset Tetap', 20, y); y += 6;
-      y = line('Peralatan & Mesin Dapur', bs.peralatan, { indent: 6 });
+      y = line('Peralatan & Inventaris', bs.peralatan, { indent: 6 });
       y = line('Total Aset Tetap', bs.totalAsetTetap, { indent: 6, bold: true });
       y += 3;
       y = line('TOTAL ASET', bs.totalAset, { bold: true });
@@ -4430,9 +4430,9 @@ this.jurnalList.forEach(j => {
           ['  Kas di Tangan', n(bs.kas)],
           ['  Kas di Bank', n(bs.bank)],
           ['  Piutang Usaha', n(bs.piutang)],
-          ['  Persediaan Bahan Baku', n(bs.persediaan)],
+          ['  Persediaan', n(bs.persediaan)],
           ['  Total Aset Lancar', n(bs.totalAsetLancar)],
-          ['  Peralatan & Mesin Dapur', n(bs.peralatan)],
+          ['  Peralatan & Inventaris', n(bs.peralatan)],
           ['  Total Aset Tetap', n(bs.totalAsetTetap)],
           ['TOTAL ASET', n(bs.totalAset)],
           ['KEWAJIBAN & EKUITAS', null],
