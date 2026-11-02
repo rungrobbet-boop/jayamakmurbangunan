@@ -55,25 +55,18 @@
   <!-- Firebase Compat SDK via CDN (untuk halaman statis analytics.html) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="/firebase-config.js"></script>
   <script>
     // Inisialisasi Firebase Compat SDK untuk baca adminPassword dari server
-    let firebaseConfig = window.FirebaseConfig || {};
-    async function initAnalyticsFirebase() {
-      try {
-        if (!firebaseConfig.apiKey) {
-          const mod = await import('/public/firebase-config.js');
-          firebaseConfig = mod.firebaseConfig || mod.default || {};
-        }
-        if (firebaseConfig.apiKey) {
-          const app = firebase.initializeApp(firebaseConfig);
-          window.analyticsFirebase = firebase.database();
-          console.log('[ANALYTICS] Firebase RTDB diinisialisasi via Compat SDK');
-        }
-      } catch (e) {
-        console.warn('[ANALYTICS] Gagal inisialisasi Firebase:', e);
+    try {
+      if (window.firebaseConfig && window.firebaseConfig.apiKey) {
+        const app = firebase.initializeApp(window.firebaseConfig);
+        window.analyticsFirebase = firebase.database();
+        console.log('[ANALYTICS] Firebase RTDB diinisialisasi via Compat SDK');
       }
+    } catch (e) {
+      console.warn('[ANALYTICS] Gagal inisialisasi Firebase:', e);
     }
-    initAnalyticsFirebase();
   </script>
 
   <style>
