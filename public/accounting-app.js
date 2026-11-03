@@ -1662,8 +1662,14 @@ window.accountingApp = function() {
                 }));
               }
               if (loadedCoa && loadedCoa.length > 0) {
-                console.log(`[ACCT-APP] Loaded ${loadedCoa.length} COA accounts from API`);
-              }
+                    console.log(`[ACCT-APP] Loaded ${loadedCoa.length} COA accounts from API`);
+                    // Paksa nama COA untuk kode akun tertentu agar konsisten di UI
+                    loadedCoa.forEach(acc => {
+                      if (acc.code === '105') acc.name = 'Persediaan';
+                      if (acc.code === '402') acc.name = 'Pendapatan Proyek & B2B';
+                      if (acc.code === '501') acc.name = 'HPP Barang/Item';
+                    });
+                  }
             }
           }
         } catch (err) {
