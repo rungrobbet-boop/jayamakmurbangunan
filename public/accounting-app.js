@@ -24,7 +24,7 @@ let _accountingChartInstance = null;
 // ============================================================================
 const DEFAULT_COA = [
   { code: '101', name: 'Kas di Tangan (Cash on Hand)', type: 'Aset', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
-  { code: '102', name: 'Kas di Bank (BCA Operasional)', type: 'Aset', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
+  { code: '102', name: 'Kas di Bank', type: 'Aset', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '103', name: 'Piutang Usaha / Catering', type: 'Aset', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '105', name: 'Persediaan', type: 'Aset', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '106', name: 'Peralatan & Inventaris', type: 'Aset', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
@@ -34,11 +34,11 @@ const DEFAULT_COA = [
   { code: '302', name: 'Laba Ditahan', type: 'Ekuitas', normalBalance: 'Kredit', initialBalance: 0, currentBalance: 0 },
   { code: '303', name: 'Prive Pemilik', type: 'Ekuitas', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '401', name: 'Pendapatan Penjualan POS', type: 'Pendapatan', normalBalance: 'Kredit', initialBalance: 0, currentBalance: 0 },
-  { code: '402', name: 'Pendapatan Pesanan Catering', type: 'Pendapatan', normalBalance: 'Kredit', initialBalance: 0, currentBalance: 0 },
+  { code: '402', name: 'Pendapatan Proyek & B2B', type: 'Pendapatan', normalBalance: 'Kredit', initialBalance: 0, currentBalance: 0 },
   { code: '501', name: 'Harga Pokok Penjualan (HPP)', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '601', name: 'Beban Gaji Karyawan', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '602', name: 'Beban Sewa Tempat & Outlet', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
-  { code: '603', name: 'Beban Listrik, Air & Gas', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
+  { code: '603', name: 'Beban Listrik, Air dan lainnya', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '604', name: 'Beban Marketing & Iklan', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 },
   { code: '605', name: 'Beban Operasional (Kurir/Ekspedisi/Lainnya)', type: 'Beban', normalBalance: 'Debit', initialBalance: 0, currentBalance: 0 }
 ];
@@ -2402,7 +2402,7 @@ this.jurnalList.forEach(j => {
         case 'pemasukanLain':
           this.manualJournalForm = {
             date: today,
-            desc: 'Penerimaan Pendapatan Pesanan Catering / Event Khusus',
+            desc: 'Penerimaan Pendapatan Proyek & B2B / Event Khusus',
             debitAccount: '102',
             creditAccount: '402',
             amount: 0,
@@ -3729,7 +3729,7 @@ this.jurnalList.forEach(j => {
       doc.text('Pendapatan Penjualan POS Kasir', 20, y);
       doc.text(formatRupiah(pl.pendapatanPOS), 195, y, { align: 'right' }); y += 5;
 
-      doc.text('Pendapatan Pesanan Catering', 20, y);
+      doc.text('Pendapatan Proyek & B2B', 20, y);
       doc.text(formatRupiah(pl.pendapatanCatering), 195, y, { align: 'right' }); y += 5;
 
       doc.setFont('helvetica', 'bold');
@@ -3749,7 +3749,7 @@ this.jurnalList.forEach(j => {
       doc.setFont('helvetica', 'normal');
       doc.text('Beban Gaji Karyawan', 20, y); doc.text(formatRupiah(pl.bebanGaji), 195, y, { align: 'right' }); y += 5;
       doc.text('Beban Sewa Tempat & Outlet', 20, y); doc.text(formatRupiah(pl.bebanSewa), 195, y, { align: 'right' }); y += 5;
-      doc.text('Beban Listrik, Air & Gas', 20, y); doc.text(formatRupiah(pl.bebanListrik), 195, y, { align: 'right' }); y += 5;
+      doc.text('Beban Listrik, Air dan lainnya', 20, y); doc.text(formatRupiah(pl.bebanListrik), 195, y, { align: 'right' }); y += 5;
       doc.text('Beban Marketing & Iklan', 20, y); doc.text(formatRupiah(pl.bebanMarketing), 195, y, { align: 'right' }); y += 5;
       doc.text('Beban Operasional & Kurir', 20, y); doc.text(formatRupiah(pl.bebanOperasional), 195, y, { align: 'right' }); y += 6;
 
@@ -3844,7 +3844,7 @@ this.jurnalList.forEach(j => {
     journalSection(doc, y) {
       const accName = (code, name) => {
         if (name) return String(name);
-        const m = { '101':'Kas di Tangan','102':'Kas di Bank','103':'Piutang Usaha','105':'Persediaan','106':'Peralatan & Inventaris','201':'Hutang Dagang / Supplier','202':'Hutang Beban & Operasional','301':'Modal Pemilik','302':'Laba Ditahan','303':'Prive Pemilik','401':'Pendapatan Penjualan POS','402':'Pendapatan Proyek & B2B','501':'Harga Pokok Penjualan (HPP)','601':'Beban Gaji Karyawan','602':'Beban Sewa Tempat','603':'Beban Listrik, Air & Gas','604':'Beban Marketing & Iklan','605':'Beban Operasional & Kurir','606':'Beban Penyusutan' };
+        const m = { '101':'Kas di Tangan','102':'Kas di Bank','103':'Piutang Usaha','105':'Persediaan','106':'Peralatan & Inventaris','201':'Hutang Dagang / Supplier','202':'Hutang Beban & Operasional','301':'Modal Pemilik','302':'Laba Ditahan','303':'Prive Pemilik','401':'Pendapatan Penjualan POS','402':'Pendapatan Proyek & B2B','501':'Harga Pokok Penjualan (HPP)','601':'Beban Gaji Karyawan','602':'Beban Sewa Tempat','603':'Beban Listrik, Air dan lainnya','604':'Beban Marketing & Iklan','605':'Beban Operasional & Kurir','606':'Beban Penyusutan' };
         return m[String(code)] || ('Akun ' + code);
       };
       const list = (this.jurnalList || [])
@@ -4380,13 +4380,13 @@ this.jurnalList.forEach(j => {
         currencyCols: [1],
         rows: [
           ['Pendapatan Penjualan POS Kasir', n(pl.pendapatanPOS)],
-          ['Pendapatan Pesanan Catering', n(pl.pendapatanCatering)],
+          ['Pendapatan Proyek & B2B', n(pl.pendapatanCatering)],
           ['TOTAL PENDAPATAN', n(pl.totalPendapatan)],
           ['Harga Pokok Penjualan (HPP)', n(pl.hpp)],
           ['LABA KOTOR', n(pl.labaKotor)],
           ['Beban Gaji Karyawan', n(pl.bebanGaji)],
           ['Beban Sewa Tempat & Outlet', n(pl.bebanSewa)],
-          ['Beban Listrik, Air & Gas', n(pl.bebanListrik)],
+          ['Beban Listrik, Air dan lainnya', n(pl.bebanListrik)],
           ['Beban Marketing & Iklan', n(pl.bebanMarketing)],
           ['Beban Operasional & Kurir', n(pl.bebanOperasional)],
           ['TOTAL BEBAN OPERASIONAL', n(pl.totalBeban)],
@@ -4453,7 +4453,7 @@ this.jurnalList.forEach(j => {
     _journalRows() {
       const accName = (code, name) => {
         if (name) return String(name);
-        const m = { '101':'Kas di Tangan','102':'Kas di Bank','103':'Piutang Usaha','105':'Persediaan','106':'Peralatan & Inventaris','201':'Hutang Dagang / Supplier','202':'Hutang Beban & Operasional','301':'Modal Pemilik','302':'Laba Ditahan','303':'Prive Pemilik','401':'Pendapatan Penjualan POS','402':'Pendapatan Proyek & B2B','501':'Harga Pokok Penjualan (HPP)','601':'Beban Gaji Karyawan','602':'Beban Sewa Tempat','603':'Beban Listrik, Air & Gas','604':'Beban Marketing & Iklan','605':'Beban Operasional & Kurir','606':'Beban Penyusutan' };
+        const m = { '101':'Kas di Tangan','102':'Kas di Bank','103':'Piutang Usaha','105':'Persediaan','106':'Peralatan & Inventaris','201':'Hutang Dagang / Supplier','202':'Hutang Beban & Operasional','301':'Modal Pemilik','302':'Laba Ditahan','303':'Prive Pemilik','401':'Pendapatan Penjualan POS','402':'Pendapatan Proyek & B2B','501':'Harga Pokok Penjualan (HPP)','601':'Beban Gaji Karyawan','602':'Beban Sewa Tempat','603':'Beban Listrik, Air dan lainnya','604':'Beban Marketing & Iklan','605':'Beban Operasional & Kurir','606':'Beban Penyusutan' };
         return m[String(code)] || ('Akun ' + code);
       };
       const list = (this.jurnalList || [])
@@ -4586,7 +4586,7 @@ this.jurnalList.forEach(j => {
 
       if (pm.includes('qris') || pm.includes('bank') || pm.includes('transfer') || pm.includes('ewallet') || pm.includes('gopay') || pm.includes('ovo') || pm.includes('dana')) {
         debitCode = '102'; // Kas di Bank
-        debitName = 'Kas di Bank (BCA Operasional)';
+        debitName = 'Kas di Bank';
       }
 
       const creditCode = '401'; // Pendapatan Penjualan POS
