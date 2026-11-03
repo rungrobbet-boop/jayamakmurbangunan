@@ -3498,7 +3498,7 @@
                 <div class="text-center pb-4 border-b border-stone-200">
                   <img x-bind:src="siteInfo.logoUrl || '/default-logo.png'" alt="Logo Toko" class="w-10 h-10 mx-auto mb-2 opacity-80" x-show="siteInfo.logoUrl">
                   <h4 class="font-extrabold text-stone-900 text-lg uppercase tracking-tight" x-text="(siteInfo && siteInfo.brandName ? siteInfo.brandName : (customKasirSubtitle || 'MyDigitalShop')).toUpperCase()">MYDIGITALSHOP</h4>
-                <h5 class="font-black text-emerald-800 text-base">LAPORAN LABA RUGI OPERASIONAL</h5>
+                <h5 class="font-black text-emerald-800 text-base">LAPORAN LABA RUGI KOMPREHENSIF</h5>
                 <p class="text-xs text-stone-500 font-mono mt-0.5">Untuk Periode Berakhir Hari Ini</p>
               </div>
 
@@ -3509,10 +3509,14 @@
                   <span>IDR</span>
                 </div>
                 <div class="flex justify-between text-xs px-3">
-                  <span class="text-stone-600">Pendapatan Penjualan Produk Bangunan POS</span>
-                  <span class="font-mono font-bold text-stone-900" x-text="formatRupiah(getAccountingSummary().totalRev)"></span>
-                </div>
-                <div class="flex justify-between text-xs font-black px-3 pt-1 border-t border-stone-200 text-emerald-900">
+                  <span class="text-stone-600">Pendapatan Kasir POS</span>
+                                    <span class="font-mono font-bold text-stone-900" x-text="formatRupiah(getAccountingSummary().totalRev)"></span>
+                                  </div>
+                                  <div class="flex justify-between text-xs px-3">
+                                    <span class="text-stone-600">Pendapatan Proyek & B2B</span>
+                                    <span class="font-mono font-bold text-stone-900" x-text="formatRupiah(getAccountingSummary().pendapatanCatering || 0)"></span>
+                                  </div>
+                                  <div class="flex justify-between text-xs font-black px-3 pt-1 border-t border-stone-200 text-emerald-900">
                   <span>TOTAL PENDAPATAN</span>
                   <span class="font-mono" x-text="formatRupiah(getAccountingSummary().totalRev)"></span>
                 </div>
@@ -3525,7 +3529,7 @@
                   <span>IDR</span>
                 </div>
                 <div class="flex justify-between text-xs px-3">
-                  <span class="text-stone-600">Pemakaian Persediaan Bahan Baku Utama (BOM)</span>
+                  <span class="text-stone-600">Biaya Pembelian Barang/Item</span>
                   <span class="font-mono font-bold text-amber-900" x-text="formatRupiah(getAccountingSummary().totalCOGS)"></span>
                 </div>
                 <div class="flex justify-between text-xs font-black px-3 pt-1 border-t border-stone-200 text-amber-950">
@@ -3539,7 +3543,7 @@
               <!-- BEBAN OPERASIONAL -->
               <div class="space-y-2 pt-2">
                 <div class="flex items-center justify-between font-extrabold text-xs uppercase text-stone-700 bg-stone-200/60 p-2 rounded-lg">
-                  <span>3. BEBAN OPERASIONAL GUDANG</span>
+                  <span>3. BEBAN OPERASIONAL</span>
                   <span>IDR</span>
                 </div>
                 <template x-for="opex in getAccountingSummary().opExList" :key="opex.name">
@@ -3570,7 +3574,7 @@
                 </div>
                 <div class="flex justify-between text-xs px-3">
                   <div>
-                    <span class="text-stone-700 font-semibold">Pembelian Bahan Baku (periode ini)</span>
+                    <span class="text-stone-700 font-semibold">Pembelian Barang/Item (periode ini)</span>
                     <span class="text-[10px] text-stone-400 block italic">
                       Bahan yang dibeli, masuk ke Persediaan (akun 105)
                     </span>
@@ -3582,14 +3586,14 @@
                   <div>
                     <span class="text-stone-700 font-semibold">Saldo Persediaan Akhir</span>
                     <span class="text-[10px] text-stone-400 block italic">
-                      Nilai bahan baku yang masih ada di gudang
+                      Nilai barang yang masih di gudang
                     </span>
                   </div>
                   <span class="font-mono font-bold text-stone-900 text-sm"
                         x-text="formatRupiah(getAccountingSummary().persediaanAkhir || 0)"></span>
                 </div>
                 <div class="text-[10px] text-stone-400 italic px-3 pt-2 leading-relaxed">
-                  💡 HPP di atas terisi otomatis saat bahan baku <strong>terjual</strong> (dari transaksi kasir). Pembelian bahan yang masih di gudang belum masuk HPP.
+                  💡 HPP di atas terisi otomatis saat barang <strong>terjual</strong> (dari transaksi kasir). Pembelian barang yang masih di gudang belum masuk HPP.
                 </div>
               </div>
             </div>
