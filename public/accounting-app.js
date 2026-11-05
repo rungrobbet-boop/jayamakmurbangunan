@@ -1660,53 +1660,65 @@ window.accountingApp = function() {
     async loadLedgerMap(bulan) {
       const targetBulan = bulan || this.bulanAktif;
       try {
+        // 1. Ambil data ledger bulan aktif dari API
         const res = await fetch(`/accounting/ledger?bulan=${encodeURIComponent(targetBulan)}`);
-        // Endpoint versi 1: GET /accounting/ledger (no acc) sudah return semua akun untuk bulan aktif
-        // Fallback: pakai endpoint /accounting/ledger tanpa path param, backend pakai bulan berjalan
-        // Untuk aman, coba 2 endpoint:
-        let data = null;
+        let currData = null;
         if (res.ok) {
           const json = await res.json();
           if (json && json.success && json.data) {
-            data = json.data;
+            currData = json.data;
           }
         }
 
-        // Jika data bulan aktif kosong, coba ambil HANYA 1 bulan sebelumnya untuk carry-forward saldo neraca
-        if (!data) {
-          const prevBulan = this._getPrevMonth(targetBulan);
-          if (prevBulan) {
-            const prevRes = await fetch(`/accounting/ledger?bulan=${encodeURIComponent(prevBulan)}`);
-            if (prevRes.ok) {
-              const prevJson = await prevRes.json();
-              if (prevJson && prevJson.success && prevJson.data) {
-                const prevData = prevJson.data;
-                data = {};
-                for (const [code, val] of Object.entries(prevData)) {
-                  const c = String(code || '').trim();
-                  if (this._BALANCE_SHEET_CODES().includes(c)) {
-                    // Akun Neraca: bawa closingBalance sebagai openingBalance bulan baru
-                    const closing = Number(val && val.closing) || 0;
-                    data[c] = { opening: closing, debit: 0, credit: 0, closing };
-                  } else {
-                    // Akun Laba Rugi (401, 402, 501, 601-606): reset ke 0 di bulan baru
-                    data[c] = { opening: 0, debit: 0, credit: 0, closing: 0 };
-                  }
-                }
-                console.log(`[ACCT-APP] Carry-forward saldo dari ${prevBulan} ke ${targetBulan}: ${Object.keys(data).length} akun`);
-              }
+        // 2. WAJIB: selalu ambil closing balance dari bulan sebelumnya untuk akun Neraca,
+        //    tidak peduli bulan aktif kosong atau sudah memiliki data.
+        const prevBulan = this._getPrevMonth(targetBulan);
+        let prevData = {};
+        if (prevBulan) {
+          const prevRes = await fetch(`/accounting/ledger?bulan=${encodeURIComponent(prevBulan)}`);
+          if (prevRes.ok) {
+            const prevJson = await prevRes.json();
+            if (prevJson && prevJson.success && prevJson.data) {
+              prevData = prevJson.data;
             }
           }
         }
 
-        // Fallback Firebase REST (ledger.json) DINONAKTIFKAN — jangan unduh seluruh ledger
-        // untuk hemat kuota bandwidth. Biarkan data kosong jika API gagal.
-        if (!data) {
-          data = {};
+        const bsCodes = this._BALANCE_SHEET_CODES();
+        const result = {};
+
+        // Kumpulkan semua kode akun yang muncul di bulan aktif atau bulan lalu
+        const allCodes = new Set();
+        if (currData && typeof currData === 'object') {
+          Object.keys(currData).forEach(k => allCodes.add(k));
+        }
+        if (prevData && typeof prevData === 'object') {
+          Object.keys(prevData).forEach(k => allCodes.add(k));
         }
 
-        this._ledgerMapByMonth[targetBulan] = data || {};
-        console.log(`[ACCT-APP] ✅ Ledger map loaded for ${targetBulan}: ${Object.keys(this._ledgerMapByMonth[targetBulan]).length} akun`);
+        for (const code of allCodes) {
+          const c = String(code || '').trim();
+          const curr = currData && currData[c] ? currData[c] : {};
+          const prev = prevData && prevData[c] ? prevData[c] : {};
+
+          const currDebit = Number(curr.debit) || 0;
+          const currCredit = Number(curr.credit) || 0;
+          const prevClosing = Number(prev && prev.closing) || 0;
+
+          if (bsCodes.includes(c)) {
+            // Akun Neraca (101-106, 201-202, 301-303): carry forward paksa
+            // Saldo Akhir Bulan Ini = Saldo Akhir Bulan Lalu + (Debit - Kredit Bulan Ini)
+            const opening = prevClosing;
+            const closing = opening + (currDebit - currCredit);
+            result[c] = { opening, debit: currDebit, credit: currCredit, closing };
+          } else {
+            // Akun Laba Rugi (4xx, 5xx, 6xx): hanya mutasi bulan aktif, tidak ada carry forward
+            result[c] = { opening: 0, debit: currDebit, credit: currCredit, closing: currDebit - currCredit };
+          }
+        }
+
+        this._ledgerMapByMonth[targetBulan] = result;
+        console.log(`[ACCT-APP] ✅ Ledger map loaded for ${targetBulan}: ${Object.keys(result).length} akun (carry-forward dari ${prevBulan || 'none'})`);
       } catch (e) {
         console.warn('[ACCT-APP] loadLedgerMap error:', e);
         this._ledgerMapByMonth[targetBulan] = {};
