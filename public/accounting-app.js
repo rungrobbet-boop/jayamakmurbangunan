@@ -692,15 +692,35 @@ window.accountingApp = function() {
           const piutang = Number(d.piutang) || 0;
           const hutang = Number(d.hutangSupplier) || 0;
 
+          // ⛔️ Paksa timpa nilai Neraca dari ledgerMap lokal (carry-forward)
+          // agar saldo bulan lalu tidak hilang ditimpa oleh API /accounting/summary
+          const ledgerMap = this._ledgerMapByMonth[targetBulan] || {};
+          const getClosing = (code) => Number((ledgerMap[code] && ledgerMap[code].closing) || 0);
+
+          const finalKas = getClosing('101') || kas;
+          const finalBank = getClosing('102') || bank;
+          const finalPiutang = getClosing('103') || piutang;
+          const finalPersediaan = getClosing('105') || 0;
+          const finalPersediaan2 = getClosing('106') || 0;
+          const finalHutang = getClosing('201') || hutang;
+          const finalHutang2 = getClosing('202') || 0;
+          const finalModal = getClosing('301') || 0;
+          const finalLabaDitahan = getClosing('302') || 0;
+          const finalPrive = getClosing('303') || 0;
+
+          const finalTotalAset = finalKas + finalBank + finalPiutang + finalPersediaan + finalPersediaan2;
+          const finalTotalKewajiban = finalHutang + finalHutang2;
+          const finalTotalEkuitas = finalModal + finalLabaDitahan + finalPrive;
+
           this.summary = {
-            totalAset,
-            totalKewajiban,
-            totalEkuitas,
+            totalAset: finalTotalAset,
+            totalKewajiban: finalTotalKewajiban,
+            totalEkuitas: finalTotalEkuitas,
             labaBulanIni,
-            kas,
-            bank,
-            piutang,
-            hutang
+            kas: finalKas,
+            bank: finalBank,
+            piutang: finalPiutang,
+            hutang: finalHutang
           };
 
           // Sinkronkan ke laporanData.pl jika tersedia rincian
@@ -732,15 +752,15 @@ window.accountingApp = function() {
             labaBersih: labaBulanIni
           };
 
-          // Sinkronkan ke balanceSheet
-          this.laporanData.balanceSheet.kas = kas;
-          this.laporanData.balanceSheet.bank = bank;
-          this.laporanData.balanceSheet.piutang = piutang;
-          this.laporanData.balanceSheet.persediaan = Number(d.persediaanAkhir) || 0;
-          this.laporanData.balanceSheet.totalAset = totalAset || (kas + bank + piutang + (Number(d.persediaanAkhir) || 0));
-          this.laporanData.balanceSheet.hutangSupplier = hutang;
-          this.laporanData.balanceSheet.totalKewajiban = totalKewajiban;
-          this.laporanData.balanceSheet.totalEkuitas = totalEkuitas;
+          // Sinkronkan ke balanceSheet (paksa dari ledgerMap lokal / carry-forward)
+          this.laporanData.balanceSheet.kas = finalKas;
+          this.laporanData.balanceSheet.bank = finalBank;
+          this.laporanData.balanceSheet.piutang = finalPiutang;
+          this.laporanData.balanceSheet.persediaan = finalPersediaan;
+          this.laporanData.balanceSheet.totalAset = finalTotalAset;
+          this.laporanData.balanceSheet.hutangSupplier = finalHutang;
+          this.laporanData.balanceSheet.totalKewajiban = finalTotalKewajiban;
+          this.laporanData.balanceSheet.totalEkuitas = finalTotalEkuitas;
           this.laporanData.balanceSheet.labaBerjalan = labaBulanIni;
         } else {
           console.warn(`[ACCT-APP] Summary data empty for ${targetBulan}, fallback ke hitungan lokal dari ledgerMap`);
@@ -829,14 +849,14 @@ window.accountingApp = function() {
         return 0;
       };
       return {
-        totalAset: getVal(this.summary?.totalAset, this.laporanData.balanceSheet?.totalAset),
-        totalKewajiban: getVal(this.summary?.totalKewajiban, this.laporanData.balanceSheet?.totalKewajiban),
-        totalEkuitas: getVal(this.summary?.totalEkuitas, this.laporanData.balanceSheet?.totalEkuitas),
+        totalAset: getVal(this.laporanData.balanceSheet?.totalAset, this.summary?.totalAset),
+        totalKewajiban: getVal(this.laporanData.balanceSheet?.totalKewajiban, this.summary?.totalKewajiban),
+        totalEkuitas: getVal(this.laporanData.balanceSheet?.totalEkuitas, this.summary?.totalEkuitas),
         labaBulanIni: getVal(this.summary?.labaBulanIni ?? this.summary?.labaBersih, this.laporanData.pl?.labaBersih),
-        kasDiTangan: getVal(this.summary?.kas ?? this.summary?.saldoKas, this.laporanData.balanceSheet?.kas),
-        kasDiBank: getVal(this.summary?.bank ?? this.summary?.saldoBank, this.laporanData.balanceSheet?.bank),
-        piutang: getVal(this.summary?.piutang, this.laporanData.balanceSheet?.piutang),
-        hutangSupplier: getVal(this.summary?.hutang ?? this.summary?.hutangSupplier, this.laporanData.balanceSheet?.hutangSupplier)
+        kasDiTangan: getVal(this.laporanData.balanceSheet?.kas, this.summary?.kas ?? this.summary?.saldoKas),
+        kasDiBank: getVal(this.laporanData.balanceSheet?.bank, this.summary?.bank ?? this.summary?.saldoBank),
+        piutang: getVal(this.laporanData.balanceSheet?.piutang, this.summary?.piutang),
+        hutangSupplier: getVal(this.laporanData.balanceSheet?.hutangSupplier, this.summary?.hutang ?? this.summary?.hutangSupplier)
       };
     // ========================================================================
     // REALTIME LISTENER: onValue untuk /accounting/summary/${bulan}
