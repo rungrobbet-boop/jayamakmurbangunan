@@ -11172,34 +11172,35 @@ async loadMoreProducts() {
         return map4to3[c] || c;
       };
 
-      try {
-        const ledgerRes = await fetch(`${fbUrl.replace(/\/$/, '')}/accounting/ledger.json`);
+            try {
+        // ✅ FIX: Ambil saldo ledger via Backend API (bukan Firebase langsung)
+        // Backend API /accounting/ledger sudah mendukung Auto Carry Forward dari bulan lalu.
+        const ledgerRes = await fetch(`/accounting/ledger?bulan=${bulan}`);
         if (ledgerRes.ok) {
-          const ledgerData = await ledgerRes.json();
-          console.log('[KASIR-COA] Ledger raw:', ledgerData);
+          const ledgerJson = await ledgerRes.json();
+          console.log('[KASIR-COA] Ledger API raw:', ledgerJson);
 
-          if (ledgerData && typeof ledgerData === 'object') {
-            // ledgerData = { "1001": { "2026-09": {closing,...} }, "1002": {...}, ... }
-            Object.entries(ledgerData).forEach(([accCode, months]) => {
-              if (!months || typeof months !== 'object') return;
-              const monthData = months[bulan];
-              if (monthData && typeof monthData === 'object') {
-                const closing = Number(monthData.closing);
-                const d = Number(monthData.debit) || 0;
-                const c = Number(monthData.credit) || 0;
-                // Prioritas: closing, fallback: debit - credit
-                const canonAcc = to3Digit(accCode); // ✅ KONVERSI 4-digit → 3-digit
-                saldoMap[canonAcc] = isNaN(closing) ? (d - c) : closing;
-              }
+          if (ledgerJson && ledgerJson.success && ledgerJson.data) {
+            const ledgerData = ledgerJson.data;
+            // ledgerData format: { "101": { opening, debit, credit, closing }, ... }
+            Object.entries(ledgerData).forEach(([accCode, monthData]) => {
+              if (!monthData || typeof monthData !== 'object') return;
+              
+              const closing = Number(monthData.closing);
+              const d = Number(monthData.debit) || 0;
+              const c = Number(monthData.credit) || 0;
+              // Prioritas: closing, fallback: debit - credit
+              const canonAcc = to3Digit(accCode);
+              saldoMap[canonAcc] = isNaN(closing) ? (d - c) : closing;
             });
           }
-          console.log(`[KASIR-COA] ✅ Ledger: ${Object.keys(saldoMap).length} accounts`);
+          console.log(`[KASIR-COA] ✅ Ledger API: ${Object.keys(saldoMap).length} accounts`);
           console.log('[KASIR-COA] Ledger saldo:', saldoMap);
         } else {
-          console.warn('[KASIR-COA] Ledger fetch failed:', ledgerRes.status);
+          console.warn('[KASIR-COA] Ledger API fetch failed:', ledgerRes.status);
         }
       } catch (e) {
-        console.warn('[KASIR-COA] Firebase ledger error:', e.message);
+        console.warn('[KASIR-COA] Ledger API error:', e.message);
       }
 
       // ============================================================
