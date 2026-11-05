@@ -1589,11 +1589,30 @@ export async function onRequest(context) {
       // lalu fallback ke path segment, lalu bulan sekarang.
       const bulan = url.searchParams.get('bulan') || parts[2] || currentBulan;
 
-      if (method === 'GET') {
+        if (method === 'GET') {
         if (accCode) {
           // Ambil ledger akun spesifik
           const res = await fetch(`${dbUrl}/accounting/ledger/${encodeURIComponent(accCode)}/${encodeURIComponent(bulan)}.json${authParam}`);
-          const data = await res.json();
+          let data = await res.json();
+
+          // === TAMBAHAN: CARRY FORWARD SALDO NERACA (1xx, 2xx, 3xx) ===
+          if ((!data || Number(data.opening) === 0) && (accCode.startsWith('1') || accCode.startsWith('2') || accCode.startsWith('3'))) {
+            const prevBulan = getPrevMonthKey(bulan);
+            if (prevBulan) {
+              const prevData = await fetchLedgerAccount(dbUrl, accCode, prevBulan, apiKey);
+              const prevClosing = Number(prevData.closing) || 0;
+              if (prevClosing !== 0) {
+                if (!data) data = { opening: 0, debit: 0, credit: 0, closing: 0 };
+                data.opening = prevClosing;
+                const kN = isKreditNormal(accCode);
+                const d = Number(data.debit) || 0;
+                const c = Number(data.credit) || 0;
+                data.closing = kN ? prevClosing + c - d : prevClosing + d - c;
+              }
+            }
+          }
+          // === BATAS TAMBAHAN ===
+
           return jsonResponse({
             success: true,
             acc: accCode,
@@ -1612,10 +1631,37 @@ export async function onRequest(context) {
               }
             }
           }
+
+          // === TAMBAHAN: CARRY FORWARD MASAL UNTUK SEMUA AKUN NERACA ===
+          const bsCodes = ['101', '102', '103', '105', '106', '201', '202', '301', '302', '303'];
+          const prevBulan = getPrevMonthKey(bulan);
+          
+          if (prevBulan) {
+            const promises = bsCodes.map(async (code) => {
+              // Jika akun ada di bulan ini (opening 0) ATAU akun belum ada sama sekali di bulan ini
+              if ((ledgerMonth[code] && Number(ledgerMonth[code].opening) === 0) || !ledgerMonth[code]) {
+                const prevData = await fetchLedgerAccount(dbUrl, code, prevBulan, apiKey);
+                const prevClosing = Number(prevData.closing) || 0;
+                
+                if (prevClosing !== 0) {
+                  if (!ledgerMonth[code]) {
+                    ledgerMonth[code] = { opening: 0, debit: 0, credit: 0, closing: 0 };
+                  }
+                  ledgerMonth[code].opening = prevClosing;
+                  const kN = isKreditNormal(code);
+                  const d = Number(ledgerMonth[code].debit) || 0;
+                  const c = Number(ledgerMonth[code].credit) || 0;
+                  ledgerMonth[code].closing = kN ? prevClosing + c - d : prevClosing + d - c;
+                }
+              }
+            });
+            await Promise.all(promises);
+          }
+          // === BATAS TAMBAHAN ===
+
           return jsonResponse({ success: true, bulan, data: ledgerMonth }, 200);
         }
       }
-
       // PUT/POST /accounting/ledger/{acc}/{bulan} — Set saldo manual / opening
       if ((method === 'POST' || method === 'PUT') && accCode && bulan) {
         const body = await request.json().catch(() => ({}));
