@@ -11069,33 +11069,40 @@ async loadMoreProducts() {
     }
   },
  
-   async loadJournalListForKasir() {
-    try {
-      this.accountingJournalLoading = true;
-      const bulan = new Date().toISOString().slice(0, 7); // YYYY-MM
+   async loadJournalListForKasir(bulanParam) {
+     try {
+       this.accountingJournalLoading = true;
+       let targetBulan = bulanParam;
 
-      const res = await fetch(`/accounting/journal/${bulan}`);
-      if (!res.ok) {
-        this.accountingJournalList = [];
-        return;
-      }
-      const json = await res.json();
-      if (json && json.success && Array.isArray(json.data)) {
-        this.accountingJournalList = json.data;
-        // Reset filter tanggal saat memuat data baru, agar tidak secara tidak sengaja menyembunyikan data
-        this.journalFilterDate = '';
-        console.log(`[KASIR-JOURNAL] Loaded ${json.data.length} entries for ${bulan}`);
-        console.log('CEK JURNAL KASIR:', json.data.slice(0, 3));
-      } else {
-        this.accountingJournalList = [];
-      }
-    } catch (e) {
-      console.warn('[KASIR-JOURNAL] Error:', e);
-      this.accountingJournalList = [];
-    } finally {
-      this.accountingJournalLoading = false;
-    }
-  },
+       // Jika tidak ada parameter, coba deteksi dari filter tanggal
+       if (!targetBulan && this.journalFilterDate) {
+         targetBulan = this.journalFilterDate.slice(0, 7); // Ambil YYYY-MM
+       }
+
+       // Jika masih kosong, pakai bulan berjalan
+       if (!targetBulan) {
+         targetBulan = new Date().toISOString().slice(0, 7);
+       }
+
+       const res = await fetch(`/accounting/journal/${targetBulan}`);
+       if (!res.ok) {
+         this.accountingJournalList = [];
+         return;
+       }
+       const json = await res.json();
+       if (json && json.success && Array.isArray(json.data)) {
+         this.accountingJournalList = json.data;
+         console.log(`[KASIR-JOURNAL] Loaded ${json.data.length} entries for ${targetBulan}`);
+       } else {
+         this.accountingJournalList = [];
+       }
+     } catch (e) {
+       console.warn('[KASIR-JOURNAL] Error:', e);
+       this.accountingJournalList = [];
+     } finally {
+       this.accountingJournalLoading = false;
+     }
+   },
 
  async loadCOAListFromBackend() {
     try {
@@ -11200,6 +11207,17 @@ async loadMoreProducts() {
         }
       } catch (e) {
         console.warn('[KASIR-COA] Firebase ledger error:', e.message);
+      }
+
+      // ✅ TAMBAHAN: Sinkronkan paksa dari Summary jika Ledger kosong/tidak lengkap
+      if (this.accountingSummaryData) {
+        const s = this.accountingSummaryData;
+        if (s.saldoKas !== undefined) saldoMap['101'] = Number(s.saldoKas);
+        if (s.saldoBank !== undefined) saldoMap['102'] = Number(s.saldoBank);
+        if (s.piutang !== undefined) saldoMap['103'] = Number(s.piutang);
+        if (s.persediaanAkhir !== undefined) saldoMap['105'] = Number(s.persediaanAkhir);
+        if (s.hutangSupplier !== undefined) saldoMap['201'] = Number(s.hutangSupplier);
+        console.log('[KASIR-COA] ✅ Fallback dari Summary diterapkan');
       }
 
       // ============================================================
