@@ -533,8 +533,8 @@ window.accountingApp = function() {
             await this.loadSiteName();
 
             // 3. Muat Data Real dari Backend (Summary, Ledger, COA, Journal)
-      await this.loadSummary(this.bulanAktif);
-      await this.loadLedgerMap(this.bulanAktif);  // ✅ BUG-5: load dulu sebelum COA
+      await this.loadLedgerMap(this.bulanAktif);  // load dulu sebelum COA & summary
+      await this.loadSummary(this.bulanAktif);    // fallback ke ledgerMap jika API kosong
       await this.loadCOA();
       await this.loadJournal(this.bulanAktif);
 
@@ -549,9 +549,9 @@ window.accountingApp = function() {
         console.log(`[ACCT-APP] Bulan aktif changed to: ${newVal}`);
         this.exportForm.period = newVal;
         this.loading = true;
-        await this.loadSummary(newVal);
-        await this.loadLedgerMap(newVal);  // ✅ BUG-5: refresh ledger map
-        await this.loadCOA();              // ✅ BUG-5: recalculate dengan ledger baru
+        await this.loadLedgerMap(newVal);   // refresh ledger map dulu
+        await this.loadSummary(newVal);     // summary fallback ke ledgerMap
+        await this.loadCOA();               // recalculate dengan ledger baru
         await this.loadJournal(newVal);
         await this.loadDashboard();
         if (this.activeTab === 'ledger') {
@@ -743,17 +743,63 @@ window.accountingApp = function() {
           this.laporanData.balanceSheet.totalEkuitas = totalEkuitas;
           this.laporanData.balanceSheet.labaBerjalan = labaBulanIni;
         } else {
-          console.warn(`[ACCT-APP] Summary data empty for ${targetBulan}, reset to 0`);
+          console.warn(`[ACCT-APP] Summary data empty for ${targetBulan}, fallback ke hitungan lokal dari ledgerMap`);
+          const ledgerMap = this._ledgerMapByMonth[targetBulan] || {};
+          const getClosing = (code) => Number((ledgerMap[code] && ledgerMap[code].closing) || 0);
+
+          const asetCodes = ['101', '102', '103', '105', '106'];
+          const kewajibanCodes = ['201', '202'];
+          const ekuitasCodes = ['301', '302', '303'];
+
+          let totalAset = 0;
+          let totalKewajiban = 0;
+          let totalEkuitas = 0;
+          asetCodes.forEach(c => { totalAset += getClosing(c); });
+          kewajibanCodes.forEach(c => { totalKewajiban += getClosing(c); });
+          ekuitasCodes.forEach(c => { totalEkuitas += getClosing(c); });
+
+          const kas = getClosing('101');
+          const bank = getClosing('102');
+          const piutang = getClosing('103');
+          const hutang = getClosing('201');
+          const persediaanAkhir = getClosing('105');
+
+          // P&L = 0 karena bulan baru (akun Laba Rugi di-reset, belum ada mutasi)
           this.summary = {
-            totalAset: 0,
-            totalKewajiban: 0,
-            totalEkuitas: 0,
+            totalAset,
+            totalKewajiban,
+            totalEkuitas,
             labaBulanIni: 0,
-            kas: 0,
-            bank: 0,
-            piutang: 0,
-            hutang: 0
+            kas,
+            bank,
+            piutang,
+            hutang
           };
+
+          this.laporanData.pl = {
+            pendapatanPOS: 0,
+            pendapatanCatering: 0,
+            totalPendapatan: 0,
+            hpp: 0,
+            labaKotor: 0,
+            bebanGaji: 0,
+            bebanSewa: 0,
+            bebanListrik: 0,
+            bebanMarketing: 0,
+            bebanOperasional: 0,
+            totalBeban: 0,
+            labaBersih: 0
+          };
+
+          this.laporanData.balanceSheet.kas = kas;
+          this.laporanData.balanceSheet.bank = bank;
+          this.laporanData.balanceSheet.piutang = piutang;
+          this.laporanData.balanceSheet.persediaan = persediaanAkhir;
+          this.laporanData.balanceSheet.totalAset = totalAset || (kas + bank + piutang + persediaanAkhir);
+          this.laporanData.balanceSheet.hutangSupplier = hutang;
+          this.laporanData.balanceSheet.totalKewajiban = totalKewajiban;
+          this.laporanData.balanceSheet.totalEkuitas = totalEkuitas;
+          this.laporanData.balanceSheet.labaBerjalan = 0;
         }
       } catch (err) {
         console.error('[ACCT-APP] Load summary error:', err);
@@ -1592,6 +1638,25 @@ window.accountingApp = function() {
      * ✅ BUG-5: Fetch /accounting/ledger/{bulan} → dapat opening/debit/credit/closing
      * untuk SEMUA akun di bulan tersebut. Sumber kebenaran saldo akumulatif.
      */
+    // Helper: hitung 1 bulan sebelumnya (format YYYY-MM), hanya 1 langkah ke belakang
+    _getPrevMonth(bulan) {
+      const m = String(bulan || '').slice(0, 7);
+      if (!m || m.length < 7) return null;
+      const year = Number(m.slice(0, 4));
+      const month = Number(m.slice(5, 7));
+      if (!year || !month || month < 1 || month > 12) return null;
+      const prevMonth = month - 1;
+      if (prevMonth < 1) {
+        return `${year - 1}-12`;
+      }
+      return `${year}-${String(prevMonth).padStart(2, '0')}`;
+    },
+
+    /** Kode akun Neraca (Balance Sheet) yang boleh dibawa saldo ke bulan baru */
+    _BALANCE_SHEET_CODES() {
+      return ['101', '102', '103', '105', '106', '201', '202', '301', '302', '303'];
+    },
+
     async loadLedgerMap(bulan) {
       const targetBulan = bulan || this.bulanAktif;
       try {
@@ -1604,6 +1669,33 @@ window.accountingApp = function() {
           const json = await res.json();
           if (json && json.success && json.data) {
             data = json.data;
+          }
+        }
+
+        // Jika data bulan aktif kosong, coba ambil HANYA 1 bulan sebelumnya untuk carry-forward saldo neraca
+        if (!data) {
+          const prevBulan = this._getPrevMonth(targetBulan);
+          if (prevBulan) {
+            const prevRes = await fetch(`/accounting/ledger?bulan=${encodeURIComponent(prevBulan)}`);
+            if (prevRes.ok) {
+              const prevJson = await prevRes.json();
+              if (prevJson && prevJson.success && prevJson.data) {
+                const prevData = prevJson.data;
+                data = {};
+                for (const [code, val] of Object.entries(prevData)) {
+                  const c = String(code || '').trim();
+                  if (this._BALANCE_SHEET_CODES().includes(c)) {
+                    // Akun Neraca: bawa closingBalance sebagai openingBalance bulan baru
+                    const closing = Number(val && val.closing) || 0;
+                    data[c] = { opening: closing, debit: 0, credit: 0, closing };
+                  } else {
+                    // Akun Laba Rugi (401, 402, 501, 601-606): reset ke 0 di bulan baru
+                    data[c] = { opening: 0, debit: 0, credit: 0, closing: 0 };
+                  }
+                }
+                console.log(`[ACCT-APP] Carry-forward saldo dari ${prevBulan} ke ${targetBulan}: ${Object.keys(data).length} akun`);
+              }
+            }
           }
         }
 
