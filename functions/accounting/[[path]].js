@@ -420,6 +420,45 @@ async function applyLedgerDelta(dbUrl, bulan, deltas, apiKey, journalId) {
  * Helper: Hitung ringkasan P&L dan Keuangan langsung dari Ledger Firebase
  */
 async function calculateSummaryFromLedger(dbUrl, bulan, apiKey) {
+    // === TAMBAHAN: Ambil jurnal bulan lalu untuk Carry Forward Neraca ===
+  const [y, m] = bulan.split('-').map(Number);
+  const prevBulan = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+  
+  let prevBalances = { '101': 0, '102': 0, '103': 0, '105': 0, '201': 0, '301': 0, '302': 0 };
+  try {
+    const auth = apiKey ? `?auth=${encodeURIComponent(apiKey)}` : '';
+    const prevRes = await fetch(`${dbUrl}/accounting/journal/${prevBulan}.json${auth}`);
+    const prevJournal = await prevRes.json() || {};
+    
+    // Kalkulasi saldo akhir bulan lalu khusus akun Neraca (1xx, 2xx, 3xx)
+    Object.values(prevJournal).forEach(entry => {
+      if (entry.status === 'approved' && Array.isArray(entry.lines)) {
+        entry.lines.forEach(line => {
+          let cleanAcc = String(line.acc).trim();
+          const map4to3 = { 
+            '1001':'101', '1002':'102', '1003':'103', '1004':'105', '1005':'106',
+            '2001':'201', '2002':'202', 
+            '3001':'301', '3002':'302', '3003':'303' 
+          };
+          cleanAcc = map4to3[cleanAcc] || cleanAcc;
+          
+          if (prevBalances[cleanAcc] !== undefined) {
+            const d = Number(line.debit) || 0;
+            const c = Number(line.credit) || 0;
+            // Aset (1xx) & Prive (303) normal Debit, sisanya normal Kredit
+            if (cleanAcc.startsWith('1') || cleanAcc === '303') {
+              prevBalances[cleanAcc] += (d - c);
+            } else {
+              prevBalances[cleanAcc] += (c - d);
+            }
+          }
+        });
+      }
+    });
+  } catch (e) {
+    console.warn(`[SUMMARY] Gagal ambil jurnal bulan lalu ${prevBulan}:`, e);
+  }
+  // === BATAS TAMBAHAN ===
   const [
     acc101, acc102, acc103, acc105,
     acc201, acc301, acc302,
@@ -444,6 +483,31 @@ async function calculateSummaryFromLedger(dbUrl, bulan, apiKey) {
     fetchLedgerAccount(dbUrl, '605', bulan, apiKey),
     fetchLedgerAccount(dbUrl, '606', bulan, apiKey)
   ]);
+    // === TAMBAHAN: Suntikkan saldo bulan lalu ke opening & closing bulan aktif ===
+  const applyCarryForward = (accData, accCode) => {
+    const prevBal = prevBalances[accCode] || 0;
+    // Hanya jalankan jika opening bulan ini masih 0, tapi ada saldo dari bulan lalu
+    if (Number(accData.opening) === 0 && prevBal !== 0) {
+      accData.opening = prevBal;
+      const d = Number(accData.debit) || 0;
+      const c = Number(accData.credit) || 0;
+      if (accCode.startsWith('1') || accCode === '303') {
+        accData.closing = prevBal + d - c;
+      } else {
+        accData.closing = prevBal + c - d;
+      }
+    }
+    return accData;
+  };
+
+  applyCarryForward(acc101, '101');
+  applyCarryForward(acc102, '102');
+  applyCarryForward(acc103, '103');
+  applyCarryForward(acc105, '105');
+  applyCarryForward(acc201, '201');
+  applyCarryForward(acc301, '301');
+  applyCarryForward(acc302, '302');
+  // === BATAS TAMBAHAN ===
 
   // Revenue (credit - debit)
   const penjualanPos = (Number(acc401.credit) || 0) - (Number(acc401.debit) || 0);
