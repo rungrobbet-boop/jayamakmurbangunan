@@ -1589,33 +1589,73 @@ export async function onRequest(context) {
       // lalu fallback ke path segment, lalu bulan sekarang.
       const bulan = url.searchParams.get('bulan') || parts[2] || currentBulan;
 
-      if (method === 'GET') {
-        if (accCode) {
-          // Ambil ledger akun spesifik
-          const res = await fetch(`${dbUrl}/accounting/ledger/${encodeURIComponent(accCode)}/${encodeURIComponent(bulan)}.json${authParam}`);
-          const data = await res.json();
-          return jsonResponse({
-            success: true,
-            acc: accCode,
-            bulan,
-            data: data || { opening: 0, debit: 0, credit: 0, closing: 0 }
-          }, 200);
-        } else {
-          // Ambil seluruh ledger untuk bulan tertentu
-          const res = await fetch(`${dbUrl}/accounting/ledger.json${authParam}`);
-          const all = await res.json();
-          const ledgerMonth = {};
-          if (all && typeof all === 'object') {
-            for (const [code, months] of Object.entries(all)) {
-              if (months && months[bulan]) {
-                ledgerMonth[code] = months[bulan];
-              }
-            }
-          }
-          return jsonResponse({ success: true, bulan, data: ledgerMonth }, 200);
-        }
-      }
+        if (method === 'GET') {
+        const map4to3 = { 
+          '1001':'101', '1002':'102', '1003':'103', '1004':'105', '1005':'106',
+          '2001':'201', '2002':'202', 
+          '3001':'301', '3002':'302', '3003':'303',
+          '4001':'401', '4002':'402', '5001':'501',
+          '6001':'601', '6002':'602', '6003':'603', '6004':'604', '6005':'605', '6006':'606'
+        };
+        
+        const [y, m] = bulan.split('-').map(Number);
+        const prevBulan = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
 
+        // 1. Tarik Jurnal Bulan Lalu & Bulan Ini
+        const [prevRes, currRes] = await Promise.all([
+          fetch(`${dbUrl}/accounting/journal/${prevBulan}.json${authParam}`),
+          fetch(`${dbUrl}/accounting/journal/${bulan}.json${authParam}`)
+        ]);
+        const prevJournal = await prevRes.json() || {};
+        const currJournal = await currRes.json() || {};
+
+        const ledgerMonth = {};
+
+        // 2. Hitung Saldo Awal (Opening) dari Jurnal Bulan Lalu
+        Object.values(prevJournal).forEach(entry => {
+          if (entry.status === 'approved' && Array.isArray(entry.lines)) {
+            entry.lines.forEach(line => {
+              let acc = map4to3[String(line.acc).trim()] || String(line.acc).trim();
+              if (!ledgerMonth[acc]) ledgerMonth[acc] = { opening: 0, debit: 0, credit: 0, closing: 0 };
+              const d = Number(line.debit) || 0;
+              const c = Number(line.credit) || 0;
+              
+              if (acc.startsWith('1') || acc.startsWith('5') || acc.startsWith('6') || acc === '303') {
+                ledgerMonth[acc].opening += (d - c);
+              } else {
+                ledgerMonth[acc].opening += (c - d);
+              }
+            });
+          }
+        });
+
+        // 3. Tambahkan Mutasi Bulan Ini
+        Object.values(currJournal).forEach(entry => {
+          if (entry.status === 'approved' && Array.isArray(entry.lines)) {
+            entry.lines.forEach(line => {
+              let acc = map4to3[String(line.acc).trim()] || String(line.acc).trim();
+              if (!ledgerMonth[acc]) ledgerMonth[acc] = { opening: 0, debit: 0, credit: 0, closing: 0 };
+              ledgerMonth[acc].debit += (Number(line.debit) || 0);
+              ledgerMonth[acc].credit += (Number(line.credit) || 0);
+            });
+          }
+        });
+
+        // 4. Hitung Saldo Akhir (Closing)
+        for (const [acc, data] of Object.entries(ledgerMonth)) {
+          const kN = isKreditNormal(acc);
+          data.closing = kN ? data.opening + data.credit - data.debit : data.opening + data.debit - data.credit;
+        }
+
+        // 5. Return Response
+        if (accCode) {
+          let targetAcc = map4to3[accCode] || accCode;
+          const data = ledgerMonth[targetAcc] || { opening: 0, debit: 0, credit: 0, closing: 0 };
+          return jsonResponse({ success: true, acc: accCode, bulan, data }, 200);
+        }
+
+        return jsonResponse({ success: true, bulan, data: ledgerMonth }, 200);
+      }
       // PUT/POST /accounting/ledger/{acc}/{bulan} — Set saldo manual / opening
       if ((method === 'POST' || method === 'PUT') && accCode && bulan) {
         const body = await request.json().catch(() => ({}));
