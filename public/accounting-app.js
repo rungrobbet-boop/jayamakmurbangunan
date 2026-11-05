@@ -1680,59 +1680,48 @@ window.accountingApp = function() {
     async loadLedgerMap(bulan) {
       const targetBulan = bulan || this.bulanAktif;
       try {
-        // 1. Ambil data ledger bulan aktif dari API
-        const res = await fetch(`/accounting/ledger?bulan=${encodeURIComponent(targetBulan)}`);
-        let currData = null;
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.success && json.data) {
-            currData = json.data;
-          }
-        }
-
-        // 2. WAJIB: selalu ambil closing balance dari bulan sebelumnya untuk akun Neraca,
-        //    tidak peduli bulan aktif kosong atau sudah memiliki data.
         const prevBulan = this._getPrevMonth(targetBulan);
-        let prevData = {};
-        if (prevBulan) {
-          const prevRes = await fetch(`/accounting/ledger?bulan=${encodeURIComponent(prevBulan)}`);
-          if (prevRes.ok) {
-            const prevJson = await prevRes.json();
-            if (prevJson && prevJson.success && prevJson.data) {
-              prevData = prevJson.data;
-            }
-          }
-        }
 
+        const allCodes = ['101','102','103','105','106','201','202','301','302','303','401','402','501','601','602','603','604','605','606'];
         const bsCodes = this._BALANCE_SHEET_CODES();
-        const result = {};
 
-        // Kumpulkan semua kode akun yang muncul di bulan aktif atau bulan lalu
-        const allCodes = new Set();
-        if (currData && typeof currData === 'object') {
-          Object.keys(currData).forEach(k => allCodes.add(k));
-        }
-        if (prevData && typeof prevData === 'object') {
-          Object.keys(prevData).forEach(k => allCodes.add(k));
-        }
+        const result = {};
 
         for (const code of allCodes) {
           const c = String(code || '').trim();
-          const curr = currData && currData[c] ? currData[c] : {};
-          const prev = prevData && prevData[c] ? prevData[c] : {};
 
-          const currDebit = Number(curr.debit) || 0;
-          const currCredit = Number(curr.credit) || 0;
-          const prevClosing = Number(prev && prev.closing) || 0;
+          // Ambil data bulan aktif untuk debit & kredit
+          const resCurr = await fetch(`/accounting/ledger/${encodeURIComponent(c)}/${encodeURIComponent(targetBulan)}`);
+          let currDebit = 0;
+          let currCredit = 0;
+          if (resCurr.ok) {
+            const jsonCurr = await resCurr.json();
+            if (jsonCurr && jsonCurr.success && jsonCurr.data) {
+              const d = jsonCurr.data;
+              currDebit = Number(d && d.debit) || 0;
+              currCredit = Number(d && d.credit) || 0;
+            }
+          }
+
+          // Ambil data bulan sebelumnya untuk closing balance (carry-forward)
+          let prevClosing = 0;
+          if (prevBulan) {
+            const resPrev = await fetch(`/accounting/ledger/${encodeURIComponent(c)}/${encodeURIComponent(prevBulan)}`);
+            if (resPrev.ok) {
+              const jsonPrev = await resPrev.json();
+              if (jsonPrev && jsonPrev.success && jsonPrev.data) {
+                prevClosing = Number(jsonPrev.data && jsonPrev.data.closing) || 0;
+              }
+            }
+          }
 
           if (bsCodes.includes(c)) {
-            // Akun Neraca (101-106, 201-202, 301-303): carry forward paksa
-            // Saldo Akhir Bulan Ini = Saldo Akhir Bulan Lalu + (Debit - Kredit Bulan Ini)
+            // Akun Neraca: Saldo Akhir = Saldo Akhir Bulan Lalu + (Debit - Kredit Bulan Ini)
             const opening = prevClosing;
             const closing = opening + (currDebit - currCredit);
             result[c] = { opening, debit: currDebit, credit: currCredit, closing };
           } else {
-            // Akun Laba Rugi (4xx, 5xx, 6xx): hanya mutasi bulan aktif, tidak ada carry forward
+            // Akun Laba Rugi: hanya mutasi bulan aktif, tidak ada carry forward
             result[c] = { opening: 0, debit: currDebit, credit: currCredit, closing: currDebit - currCredit };
           }
         }
