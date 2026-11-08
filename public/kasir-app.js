@@ -475,6 +475,9 @@ window.kasirApp = () => ({
   isLoadingMoreInventory: false,
   _inventoryAll: [],
   inventorySearch: '',
+  inventoryPage: 1,
+  inventoryPerPage: 20,
+  isGeneratingMenu: false,
   inventoryTab: 'ingredients', // 'ingredients' | 'products' | 'pembelian'
   todayTotalRevenue: 2450000,
 
@@ -8267,6 +8270,19 @@ async loadMoreProducts() {
     );
   },
 
+  // ✅ Getter untuk memotong data sesuai halaman
+  paginatedInventoryList() {
+    const list = this.filteredInventoryList();
+    const start = (this.inventoryPage - 1) * this.inventoryPerPage;
+    const end = start + this.inventoryPerPage;
+    return list.slice(start, end);
+  },
+
+  totalInventoryPages() {
+    const list = this.filteredInventoryList();
+    return Math.ceil(list.length / this.inventoryPerPage) || 1;
+  },
+
   // -------------------------------------------------------------------------
   // 14.2.1 PRODUK & FORMULASI RESEP (BOM / INGREDIENT RECIPES)
   // -------------------------------------------------------------------------
@@ -13877,103 +13893,61 @@ async loadMoreProducts() {
    */
   async generateAllMenuFromInventory() {
     const list = Array.isArray(this.inventoryList) ? this.inventoryList : [];
-    if (list.length === 0) {
-      this.showToast('Tidak ada data Bahan Baku untuk di-generate. Import CSV dulu atau tambah bahan baku.', 'error');
-      this.playSound('error');
-      return 0;
-    }
+    if (list.length === 0) { this.showToast('Tidak ada data Bahan Baku.', 'error'); return 0; }
 
     const existingLinked = new Set((this.menuList || []).map(m => m.inventoryId).filter(Boolean));
     const toGenerate = list.filter(inv => !existingLinked.has(inv.id));
 
     if (toGenerate.length === 0) {
-      this.showToast('Semua Bahan Baku sudah di-generate menjadi Menu Siap Jual.', 'notify');
-      this.playSound('notify');
+      this.showToast('Semua Bahan Baku sudah di-generate menjadi Menu.', 'notify');
       return 0;
     }
 
+    this.isGeneratingMenu = true;
     let generated = 0;
     const now = Date.now();
+    const CHUNK_SIZE = 10;
 
-    for (const inv of toGenerate) {
-      const menuId = `m_inv_${inv.id || now + generated}`;
-      const price = Number(inv.priceEcer || inv.purchasePrice || 0) || 15000;
-      const newMenuItem = {
-        id: menuId,
-        name: inv.name || 'Produk Tanpa Nama',
-        category: inv.category || 'lainnya',
-        price: price,
-        priceEcer: price,
-        cost: Number(inv.purchasePrice) || 0,
-        unit: inv.unit || 'pcs',
-        sku: inv.sku || '',
-        barcode: inv.barcode || '',
-        desc: `Produk siap jual dari bahan baku ${inv.name}`,
-        image: inv.image || '',
-        inventoryId: inv.id,
-        isReadyToSell: true,
-        active: true,
-        generatedAt: now
-      };
+    for (let i = 0; i < toGenerate.length; i += CHUNK_SIZE) {
+      const chunk = toGenerate.slice(i, i + CHUNK_SIZE);
 
-      const recipe = {
-        menuId: menuId,
-        ingredients: [
-          { itemId: inv.id, amount: 1, unit: inv.unit || 'pcs' }
-        ]
-      };
+      const promises = chunk.map(async (inv) => {
+        const menuId = `m_inv_${inv.id || now + generated}`;
+        const price = Number(inv.priceEcer || inv.purchasePrice || 0) || 15000;
 
-      try {
-        this.menuList.push(newMenuItem);
-        this.menuRecipes[menuId] = recipe;
+        const newMenuItem = {
+          id: menuId, name: inv.name || 'Produk Tanpa Nama', category: inv.category || 'lainnya',
+          price: price, priceEcer: price, cost: Number(inv.purchasePrice) || 0,
+          unit: inv.unit || 'pcs', sku: inv.sku || '', barcode: inv.barcode || '',
+          desc: `Produk siap jual dari bahan baku ${inv.name}`, image: inv.image || '',
+          inventoryId: inv.id, isReadyToSell: true, active: true, generatedAt: now
+        };
+        const recipe = { menuId: menuId, ingredients: [{ itemId: inv.id, amount: 1, unit: inv.unit || 'pcs' }] };
 
-        await fetch(`/menu/${encodeURIComponent(menuId)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newMenuItem)
-        });
-        await fetch(`/inventory/recipes/${encodeURIComponent(menuId)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(recipe)
-        });
+        try {
+          await Promise.all([
+            fetch(`/menu/${encodeURIComponent(menuId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMenuItem) }),
+            fetch(`/inventory/recipes/${encodeURIComponent(menuId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(recipe) }),
+            fetch(`/inventory/${encodeURIComponent(inv.id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isReadyToSell: true, linkedMenuId: menuId }) })
+          ]);
 
-        inv.isReadyToSell = true;
-        inv.linkedMenuId = menuId;
-        await fetch(`/inventory/${encodeURIComponent(inv.id)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isReadyToSell: true, linkedMenuId: menuId })
-        });
-
-        if (this._fbDb && this._fbSet && this._fbRef) {
-          try {
-            await this._fbSet(this._fbRef(this._fbDb, `menu_items/${menuId}`), newMenuItem);
-            await this._fbSet(this._fbRef(this._fbDb, `inventory/${inv.id}`), inv);
-            await this._fbSet(this._fbRef(this._fbDb, `menu_recipes/${menuId}`), recipe);
-          } catch (e) { /* non-fatal */ }
+          this.menuList.push(newMenuItem);
+          this.menuRecipes[menuId] = recipe;
+          inv.isReadyToSell = true;
+          inv.linkedMenuId = menuId;
+          generated++;
+        } catch (err) {
+          console.warn(`[GENERATE-ALL] Gagal menu ${inv.name}:`, err);
         }
+      });
 
-        // ✅ SYNC ke Firestore products: simpan isReadyToSell & linkedMenuId
-        // agar loadInventory() bisa membaca setelah hard refresh
-        if (FB_FS) {
-          try {
-            await FB_FS.collection('products').doc(inv.id).update({
-              isReadyToSell: true,
-              linkedMenuId: menuId
-            });
-          } catch (e) { /* non-fatal */ }
-        }
-
-        generated++;
-      } catch (err) {
-        console.warn(`[GENERATE-ALL] Gagal menu ${inv.name}:`, err);
-      }
+      await Promise.all(promises);
+      this.showToast(`Memproses... (${Math.min(i + CHUNK_SIZE, toGenerate.length)}/${toGenerate.length})`, 'notify');
     }
 
+    this.isGeneratingMenu = false;
     this.playSound(generated > 0 ? 'success' : 'error');
     this.showToast(`Berhasil meng-generate ${generated} Produk Siap Jual`, generated > 0 ? 'success' : 'error');
-    console.log(`[GENERATE-ALL] ${generated}/${toGenerate.length} produk siap jual dibuat dari inventory`);
     return generated;
   },
 

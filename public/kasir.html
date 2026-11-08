@@ -1965,6 +1965,7 @@
             <input :disabled="isReadOnlyMode" 
               type="text" 
               x-model="inventorySearch"
+              @input="inventoryPage = 1"
               placeholder="Cari barang, produk siap jual..." 
               class="w-full min-h-[48px] pl-11 pr-4 rounded-xl border border-stone-300 bg-stone-50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500" 
             />
@@ -2226,7 +2227,7 @@
         <!-- TAMPILAN 2: GRID CARD ITEM INVENTORY / BAHAN BAKU -->
         <div x-show="(inventoryTab || 'ingredients') === 'ingredients'" class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <template x-for="item in filteredInventoryList()" :key="item.id">
+            <template x-for="item in paginatedInventoryList()" :key="item.id">
               <div class="bg-white rounded-2xl p-5 border border-stone-200 shadow-xs space-y-4 flex flex-col justify-between">
                 <div>
                   <div class="flex items-start justify-between gap-2">
@@ -2345,6 +2346,32 @@
                 </div>
               </div>
             </template>
+          </div>
+
+          <!-- ✅ UI PAGINASI INVENTORY -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 pb-2 border-t border-stone-200 mt-4">
+            <div class="text-xs text-stone-500 font-medium">
+              Menampilkan <span class="font-bold text-stone-800" x-text="paginatedInventoryList().length"></span> dari
+              <span class="font-bold text-stone-800" x-text="filteredInventoryList().length"></span> produk
+            </div>
+
+            <div class="flex items-center gap-2" x-show="totalInventoryPages() > 1">
+              <button
+                type="button"
+                @click="inventoryPage = Math.max(1, inventoryPage - 1)"
+                :disabled="inventoryPage === 1"
+                class="px-3 py-1.5 rounded-lg border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-50 text-xs font-bold text-stone-700 transition cursor-pointer">
+                <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+              </button>
+              <span class="text-xs text-stone-600 font-mono font-bold" x-text="'Hal ' + inventoryPage + ' / ' + totalInventoryPages()"></span>
+              <button
+                type="button"
+                @click="inventoryPage = Math.min(totalInventoryPages(), inventoryPage + 1)"
+                :disabled="inventoryPage === totalInventoryPages()"
+                class="px-3 py-1.5 rounded-lg border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-50 text-xs font-bold text-stone-700 transition cursor-pointer">
+                Next <i class="fa-solid fa-chevron-right ml-1"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Empty State Bahan Baku -->
