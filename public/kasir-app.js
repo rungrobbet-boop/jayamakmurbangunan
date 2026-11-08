@@ -3491,6 +3491,15 @@ async loadMoreProducts() {
       console.error("[FIFO-TX] HPP akan 0 karena FIFO gagal di atas.");
     }
 
+    // Simpan flag isFallbackHpp ke record transaksi
+    txRecord.isFallbackHpp = fifoResult.isFallbackHpp || false;
+    // Simpan ulang ke Firebase dengan field tambahan
+    if (savedToFirebase && this._fbDb && this._fbSet && this._fbRef) {
+      try {
+        await this._fbSet(this._fbRef(this._fbDb, `pos/transactions/${dateStr}/${txId}`), txRecord);
+      } catch (e) { console.warn('[TX] Gagal simpan ulang isFallbackHpp:', e); }
+    }
+
     // ✅ Pemotongan stok RTDB — berjalan meski FIFO gagal (asalkan DB siap)
     for (const item of normalizedItems) {
       const invRef = this._fbRef(this._fbDb, `inventory/${item.id}`);
@@ -6843,7 +6852,8 @@ async loadMoreProducts() {
       // 🎣 FASE 7: Inisialisasi stock_batches (opening balance) setelah loadInventory selesai
       if (this._fbDb && this._fbRef && this._fbSet && this._fbGet) {
         await this.initStockBatches();
-        await this.syncBatchCosts();
+        // syncBatchCosts() DINONAKTIFKAN: mencegah penimpaan harga beli batch lama dengan purchasePrice terbaru
+        // await this.syncBatchCosts();
       }
 
     } catch (e) {
@@ -7013,36 +7023,9 @@ async loadMoreProducts() {
    * yang terlanjur tersimpan dengan harga jual (priceEcer) bukan harga beli.
    */
   async syncBatchCosts() {
-    try {
-      if (!this._fbDb || !this._fbRef || !this._fbGet || !this._fbSet) {
-        console.warn('[SYNC-BATCH] RTDB belum siap, lewati sinkronisasi costPerUnit');
-        return;
-      }
-      let synced = 0;
-      for (const item of this.inventoryList || []) {
-        const purchasePrice = Number(item.purchasePrice || 0);
-        if (!purchasePrice) continue; // lewati produk yang belum ada purchasePrice
-        const batchRef = this._fbRef(this._fbDb, `stock_batches/${item.id}`);
-        const snap = await this._fbGet(batchRef);
-        const batchesData = snap.val() || {};
-        for (const [batchId, b] of Object.entries(batchesData || {})) {
-          if (!b || typeof b !== 'object') continue;
-          const oldCost = Number(b.costPerUnit || 0);
-          if (oldCost === purchasePrice) continue; // sudah benar, lewati
-          await this._fbSet(this._fbRef(this._fbDb, `stock_batches/${item.id}/${batchId}`), {
-            ...b,
-            costPerUnit: purchasePrice,
-            syncedAt: Date.now(),
-            syncedFrom: 'purchasePrice'
-          });
-          synced++;
-          console.log(`[SYNC-BATCH] ${item.id}/${batchId}: costPerUnit ${oldCost} -> ${purchasePrice}`);
-        }
-      }
-      console.log(`[SYNC-BATCH] Selesai, ${synced} batch diperbarui costPerUnit dari purchasePrice`);
-    } catch (e) {
-      console.warn('[SYNC-BATCH] Gagal sinkronkan costPerUnit:', e.message);
-    }
+    // DINONAKTIFKAN: mencegah penimpaan costPerUnit batch lama dengan purchasePrice terbaru (melindungi HPP historis FIFO)
+    console.warn('[SYNC-BATCH] Fungsi dinonaktifkan — costPerUnit batch lama tidak akan ditimpa.');
+    return;
   },
 
   /** 
@@ -7060,6 +7043,7 @@ async loadMoreProducts() {
     }
     const allUsedBatches = [];
     let totalHpp = 0;
+    let hasFallback = false;
     for (const item of items) {
       // === ID MAPPING: cart id bisa berupa 'inv_cat-keramik-60x60_7' tapi batch di stock_batches pakai 'cat-keramik-60x60' ===
       let productId = String(item.id);
@@ -7089,7 +7073,22 @@ async loadMoreProducts() {
       }
 
       if (!batchesData || Object.keys(batchesData).length === 0) {
-        throw new Error(`[FIFO-TX] ERROR FATAL: stock_batches/${String(item.id)} tidak ditemukan di RTDB (dicoba juga ${productId}). Tidak dapat proses HPP untuk produk ini.`);
+        console.warn(`[FIFO] ⚠️ Batch kosong untuk ${productId}, pakai fallback purchasePrice inventory.`);
+        hasFallback = true;
+        const invItem = this.inventoryList.find(i => i.id === productId || i.id === String(item.id));
+        const fallbackPrice = invItem ? Number(invItem.purchasePrice || 0) : 0;
+        batchesData = {
+          [`FALLBACK-${Date.now()}`]: {
+            batchId: `FALLBACK-${Date.now()}`,
+            productId,
+            dateIn: Date.now(),
+            qtyIn: needQty,
+            qtyRemaining: needQty,
+            costPerUnit: fallbackPrice,
+            source: 'fallback',
+            isFallback: true
+          }
+        };
       }
 
       const needQty = Number(item.qty) || 0;
@@ -7156,8 +7155,8 @@ async loadMoreProducts() {
       console.log(`[FIFO] ${productId}: qty=${needQty}, usedBatches=${JSON.stringify(usedBatches)}, totalHpp=${itemHpp}`);
     }
 
-    console.log("[FIFO-TX] Hasil HPP:", JSON.stringify({ usedBatches: allUsedBatches, totalHpp }));
-    return { usedBatches: allUsedBatches, totalHpp };
+    console.log("[FIFO-TX] Hasil HPP:", JSON.stringify({ usedBatches: allUsedBatches, totalHpp, isFallbackHpp: hasFallback }));
+    return { usedBatches: allUsedBatches, totalHpp, isFallbackHpp: hasFallback };
   },
 
   /**
@@ -7619,6 +7618,26 @@ async loadMoreProducts() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logPayload)
       });
+
+      // ✅ FIFO: Buat batch baru untuk pembelian ini (harga beli historis)
+      try {
+        const batchId = `BATCH-${Date.now()}`;
+        const batchData = {
+          batchId: batchId,
+          productId: item.id,
+          dateIn: Date.now(),
+          qtyIn: numQty,
+          qtyRemaining: numQty,
+          costPerUnit: numPrice,
+          source: 'purchase'
+        };
+        if (this._fbDb && this._fbRef && this._fbSet) {
+          await this._fbSet(this._fbRef(this._fbDb, `stock_batches/${item.id}/${batchId}`), batchData);
+          console.log(`[FIFO] ✅ Batch baru dibuat: ${batchId} @ Rp ${numPrice}`);
+        }
+      } catch (batchErr) {
+        console.warn('[FIFO] ⚠️ Gagal membuat batch baru (stok tetap bertambah, HPP pakai fallback):', batchErr);
+      }
 
       // ✅ SYNC RTDB → Firestore: stok masuk dari pembelian Kasir di-sinkronkan ke Firestore
       // agar stok di Landing Page ikut bertambah secara otomatis.
@@ -12396,6 +12415,26 @@ async loadMoreProducts() {
             changeType: 'purchase'
           })
         }).catch(() => {});
+
+        // ✅ FIFO: Buat batch baru untuk penerimaan barang ini
+        try {
+          const batchId = `BATCH-${Date.now()}`;
+          const batchData = {
+            batchId: batchId,
+            productId: it.id,
+            dateIn: Date.now(),
+            qtyIn: Number(it.qty),
+            qtyRemaining: Number(it.qty),
+            costPerUnit: Number(it.price),
+            source: 'receive'
+          };
+          if (this._fbDb && this._fbRef && this._fbSet) {
+            await this._fbSet(this._fbRef(this._fbDb, `stock_batches/${it.id}/${batchId}`), batchData);
+            console.log(`[FIFO] ✅ Batch baru dibuat: ${batchId} @ Rp ${it.price}`);
+          }
+        } catch (batchErr) {
+          console.warn('[FIFO] ⚠️ Gagal membuat batch baru (stok tetap bertambah, HPP pakai fallback):', batchErr);
+        }
 
         if (this._fbDb && this._fbSet && this._fbRef) {
           try {
