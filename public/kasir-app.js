@@ -8283,6 +8283,15 @@ async loadMoreProducts() {
     return Math.ceil(list.length / this.inventoryPerPage) || 1;
   },
 
+  // ✅ Ringkasan stok untuk halaman paginasi
+  totalInventoryStock() {
+    return this.filteredInventoryList().reduce((acc, item) => acc + Number(item.stock || 0), 0);
+  },
+
+  totalInventoryValue() {
+    return this.filteredInventoryList().reduce((acc, item) => acc + Number(item.stock || 0) * Number(item.purchasePrice || item.hargaBeli || 0), 0);
+  },
+
   // -------------------------------------------------------------------------
   // 14.2.1 PRODUK & FORMULASI RESEP (BOM / INGREDIENT RECIPES)
   // -------------------------------------------------------------------------
