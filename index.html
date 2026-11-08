@@ -7359,7 +7359,7 @@ git push -u origin main</pre>
             if (typeof fetchFn === 'function') {
               try {
                 result = await fetchFn({
-                  limit: 100,
+                  limit: 500,
                   lastDoc: isLoadMore ? this.firestoreLastDoc : null,
                   orderByField: 'name',
                   orderDirection: 'asc'
