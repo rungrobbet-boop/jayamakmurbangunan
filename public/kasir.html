@@ -5380,14 +5380,13 @@
 
         <div>
           <label class="block text-xs font-bold text-stone-700 uppercase mb-1">Kategori</label>
-          <select :disabled="isReadOnlyMode" 
+          <select :disabled="isReadOnlyMode"
             x-model="newInventoryForm.category"
             class="w-full h-11 px-3 rounded-xl border border-stone-300 bg-stone-50 text-xs font-bold text-stone-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            <option value="Bahan Bangunan">Bahan Bangunan</option>
-            <option value="Semen">Semen</option>
-            <option value="Cat">Cat</option>
-            <option value="Besi">Besi</option>
-            <option value="Lainnya">Lainnya</option>
+            <!-- ✅ FIX: Looping kategori dinamis dari sistem -->
+            <template x-for="cat in getAvailableMenuCategories()" :key="cat.id || cat.name">
+              <option :value="cat.name || cat.id" x-text="cat.name || cat.id"></option>
+            </template>
           </select>
         </div>
 
