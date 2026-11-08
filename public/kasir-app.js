@@ -229,7 +229,7 @@ window.kasirApp = () => ({
   lastVisibleProduct: null,
   hasMoreProducts: true,
   isLoadingMoreProducts: false,
-  PRODUCT_LIMIT: 1000, // ✅ Naikkan limit agar semua produk termuat
+  PRODUCT_LIMIT: 5000, // ✅ FIX: Naikkan drastis agar semua produk termuat
 
   // Cart price level: 'ecer' | 'partai' | 'agen'
   cartPriceLevel: 'ecer',
