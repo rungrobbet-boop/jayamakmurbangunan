@@ -2642,6 +2642,9 @@ async loadMoreProducts() {
           imageUrl: item.imageUrl || '',
           syncedAt: now,
           source: 'kasir-pos-sync-stok-only',
+          // ✅ Produk yang di-sync dari Inventory dianggap Siap Jual oleh POS
+          isReadyToSell: true,
+          linkedMenuId: item.id,
         }, { merge: true });
       });
 
@@ -2654,26 +2657,40 @@ async loadMoreProducts() {
 
       // ✅ Inject data stok baru ke menuList lokal agar katalog transaksi tetap utuh
       // tanpa memanggil listenMenuItems() yang dapat menyebabkan freeze/infinite loop
-      const mergedMap = new Map();
-      mergedList.forEach((item) => {
-        if (item.id) mergedMap.set(String(item.id), item);
-      });
-
-      this.menuList = (this.menuList || []).map((menuItem) => {
-        if (!menuItem || !menuItem.id) return menuItem;
-        const synced = mergedMap.get(String(menuItem.id));
-        if (synced) {
-          return {
-            ...menuItem,
-            stock: synced.stock,
-            stok: synced.stok,
-          };
+      if ((this.menuList || []).length === 0) {
+        // Katalog belum ada — muat dari sumber asli (aman, hanya sekali)
+        try {
+          if (typeof this.listenMenuItems === 'function') {
+            await this.listenMenuItems();
+            console.log('[SYNC-STOK] Katalog menu difresh dari sumber asli (kosong sebelumnya)');
+          }
+        } catch (refreshErr) {
+          console.warn('[SYNC-STOK] Gagal refresh katalog menu:', refreshErr.message);
         }
-        return menuItem;
-      });
+      } else {
+        // Katalog sudah ada — injeksi lokal stok + isReadyToSell tanpa memanggil listenMenuItems
+        const mergedMap = new Map();
+        mergedList.forEach((item) => {
+          if (item.id) mergedMap.set(String(item.id), item);
+        });
 
-      // Paksa Alpine.js render ulang
-      this.menuList = [...this.menuList];
+        this.menuList = (this.menuList || []).map((menuItem) => {
+          if (!menuItem || !menuItem.id) return menuItem;
+          const synced = mergedMap.get(String(menuItem.id));
+          if (synced) {
+            return {
+              ...menuItem,
+              stock: synced.stock,
+              stok: synced.stok,
+              isReadyToSell: true,
+            };
+          }
+          return menuItem;
+        });
+
+        // Paksa Alpine.js render ulang
+        this.menuList = [...this.menuList];
+      }
 
       return true;
     } catch (e) {
