@@ -1653,7 +1653,7 @@
             <button 
               type="submit" 
               :disabled="isProcessingPayment || cart.length === 0"
-              class="w-full py-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 disabled:opacity-50 text-white font-extrabold text-base sm:text-lg rounded-2xl shadow-lg shadow-brand-500/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+              class="w-full py-4 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-extrabold text-base sm:text-lg rounded-2xl shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
               <span x-show="isProcessingPayment"><i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan Pembayaran...</span>
               <span x-show="!isProcessingPayment" class="flex items-center gap-2">
                 <i :class="selectedPaymentMethod === 'qris' ? 'fa-solid fa-qrcode' : (selectedPaymentMethod === 'bank_transfer' ? 'fa-solid fa-building-columns' : 'fa-solid fa-shield-halved')"></i>
@@ -1804,7 +1804,7 @@
     </section>
 
     <!-- SECTION CATERING B2B CORPORATE (>50 BOX) -->
-    <section id="b2b-section" class="mt-16 bg-gradient-to-br from-stone-900 to-stone-800 text-white rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
+    <section id="b2b-section" class="mt-16 bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden border border-slate-700">
       <div class="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10">
         <i class="fa-solid fa-briefcase text-[200px]"></i>
       </div>
