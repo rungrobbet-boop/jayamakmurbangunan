@@ -469,6 +469,11 @@ window.kasirApp = () => ({
   voidReasonText: '',
   isVoidProcessing: false,
   inventoryList: [],
+  inventoryLimit: 50,
+  inventoryLastKey: null,
+  hasMoreInventory: true,
+  isLoadingMoreInventory: false,
+  _inventoryAll: [],
   inventorySearch: '',
   inventoryTab: 'ingredients', // 'ingredients' | 'products' | 'pembelian'
   todayTotalRevenue: 2450000,
@@ -6773,6 +6778,13 @@ async loadMoreProducts() {
     this.loadingStates.inventory = true;
     localStorage.removeItem('dapur_inventory_list');
 
+    // Reset pagination state
+    this._inventoryAll = [];
+    this.inventoryList = [];
+    this.inventoryLastKey = null;
+    this.hasMoreInventory = true;
+    this.isLoadingMoreInventory = false;
+
     // Timeout safety 5 detik agar state loading tidak gantung
     const invTimeout = setTimeout(() => {
       if (this.loadingStates && this.loadingStates.inventory) {
@@ -6818,8 +6830,11 @@ async loadMoreProducts() {
               isCredit: d.isCredit === true || d.isCredit === 'true' || d.isCredit === 1 || Boolean(d.isCredit),
             });
           }
-          this.inventoryList = invFromRtdb;
-          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item`);
+          this._inventoryAll = invFromRtdb;
+          this.inventoryList = invFromRtdb.slice(0, this.inventoryLimit);
+          this.inventoryLastKey = this.inventoryList[this.inventoryList.length - 1]?.id || null;
+          this.hasMoreInventory = invFromRtdb.length > this.inventoryLimit;
+          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item (total ${invFromRtdb.length}, limit ${this.inventoryLimit})`);
         } catch (e) {
           console.warn('[RTDB-INV] Gagal muat inventory dari RTDB:', e);
         }
@@ -6864,8 +6879,11 @@ async loadMoreProducts() {
               image: d.image || d.imageUrl || '',
             });
           }
-          this.inventoryList = invFromRtdb;
-          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item`);
+          this._inventoryAll = invFromRtdb;
+          this.inventoryList = invFromRtdb.slice(0, this.inventoryLimit);
+          this.inventoryLastKey = this.inventoryList[this.inventoryList.length - 1]?.id || null;
+          this.hasMoreInventory = invFromRtdb.length > this.inventoryLimit;
+          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item (total ${invFromRtdb.length}, limit ${this.inventoryLimit})`);
         } catch (e) {
           console.warn('[RTDB-INV] Gagal muat inventory dari RTDB:', e);
         }
@@ -6892,6 +6910,37 @@ async loadMoreProducts() {
     } finally {
       clearTimeout(invTimeout);
       this.loadingStates.inventory = false;
+    }
+  },
+
+  /** ✅ Fitur Paginasi: Muat inventory lebih banyak (cursor-based) */
+  async loadMoreInventory() {
+    if (this.isLoadingMoreInventory || !this.hasMoreInventory) return;
+    this.isLoadingMoreInventory = true;
+    try {
+      if (!this._inventoryAll || this._inventoryAll.length === 0) return;
+
+      let startIdx = 0;
+      if (this.inventoryLastKey) {
+        startIdx = this._inventoryAll.findIndex(item => item.id === this.inventoryLastKey);
+        if (startIdx !== -1) startIdx += 1;
+      }
+
+      const nextBatch = this._inventoryAll.slice(startIdx, startIdx + this.inventoryLimit);
+      if (nextBatch.length === 0) {
+        this.hasMoreInventory = false;
+        return;
+      }
+
+      this.inventoryList = [...this.inventoryList, ...nextBatch];
+      this.inventoryLastKey = nextBatch[nextBatch.length - 1].id || null;
+      this.hasMoreInventory = startIdx + nextBatch.length < this._inventoryAll.length;
+
+      console.log(`[INV-PAGINASI] Muat lebih banyak: +${nextBatch.length} item (total tampil ${this.inventoryList.length}, hasMore ${this.hasMoreInventory})`);
+    } catch (e) {
+      console.warn('loadMoreInventory error:', e);
+    } finally {
+      this.isLoadingMoreInventory = false;
     }
   },
 
