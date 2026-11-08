@@ -5643,99 +5643,56 @@
 
       <!-- Form Informasi Produk (sesuai template CSV) -->
       <div
-  :class="isReadOnlyMode ? 'pointer-events-none opacity-60 select-none' : ''"
-  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200 transition-all">
-        <div class="sm:col-span-3">
+        :class="isReadOnlyMode ? 'pointer-events-none opacity-60 select-none' : ''"
+        class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl bg-stone-50 border border-stone-200 transition-all">
+
+        <div class="sm:col-span-2">
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Nama Produk *</label>
-          <input
-            type="text"
-            x-model="recipeForm.name"
-            placeholder="Contoh: Semen Portland, Cat Tembok, Besi Beton 12mm"
-            class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="text" x-model="recipeForm.name" placeholder="Contoh: Semen Portland" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
         <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Supplier</label>
-          <input
-            type="text"
-            x-model="recipeForm.supplier"
-            placeholder="Nama supplier"
-            class="w-full h-10 px-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="text" x-model="recipeForm.supplier" placeholder="Nama supplier" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
         <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Kategori</label>
-          <select
-            x-model="recipeForm.categoryId"
-            class="w-full h-10 px-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+          <select x-model="recipeForm.categoryId" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
             <template x-for="cat in getAvailableMenuCategories()" :key="cat.id">
               <option :value="cat.id" x-text="cat.name"></option>
             </template>
           </select>
         </div>
 
-        <div class="sm:col-span-2">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Harga Ecer (Rp)</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.priceEcer"
-            min="100"
-            step="100"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.priceEcer" min="100" step="100" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-1">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Min. Partai</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.minOrderPartai"
-            min="1"
-            step="1"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.minOrderPartai" min="1" step="1" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-2">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Harga Partai (Rp)</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.pricePartai"
-            min="100"
-            step="100"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.pricePartai" min="100" step="100" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-1">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Min. Agen</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.minOrderAgen"
-            min="1"
-            step="1"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.minOrderAgen" min="1" step="1" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-2">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Harga Agen (Rp)</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.priceAgen"
-            min="100"
-            step="100"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.priceAgen" min="100" step="100" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-1">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Satuan</label>
-          <select
-            x-model="recipeForm.unit"
-            class="w-full h-10 px-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+          <select x-model="recipeForm.unit" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
             <option value="pcs">pcs</option>
             <option value="sak">sak</option>
             <option value="batang">batang</option>
@@ -5749,37 +5706,19 @@
           </select>
         </div>
 
-        <div class="sm:col-span-1">
+        <div>
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Stok</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.stock"
-            min="0"
-            step="1"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.stock" min="0" step="1" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-3">
+        <div class="sm:col-span-2">
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">URL Gambar</label>
-          <input
-            type="text"
-            x-model="recipeForm.imageUrl"
-            placeholder="https://contoh.com/produk.jpg"
-            class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="text" x-model="recipeForm.imageUrl" placeholder="https://contoh.com/produk.jpg" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
         </div>
 
-        <div class="sm:col-span-1">
+        <div class="sm:col-span-2">
           <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1">Urutan Favorit (1-20)</label>
-          <input
-            type="number"
-            x-model.number="recipeForm.favoriteOrder"
-            min="0"
-            max="20"
-            placeholder="0 = biasa"
-            class="w-full h-10 px-2.5 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          <input type="number" x-model.number="recipeForm.favoriteOrder" min="0" max="20" placeholder="0 = biasa" class="w-full h-10 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500" />
           <p class="text-[9px] text-stone-500 mt-0.5">1 = tampil paling atas di Toko Utama</p>
         </div>
       </div>

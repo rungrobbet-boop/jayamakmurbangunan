@@ -8291,6 +8291,7 @@ async loadMoreProducts() {
     const existingRecipe = this.menuRecipes[menu.id] || { ingredients: [] };
     
     this.recipeForm = {
+      id: menu.id, // ✅ FIX: Tambahkan ini agar judul modal mendeteksi mode Edit
       menuId: menu.id,
       name: menu.name || '',
       supplier: menu.supplier || '',
