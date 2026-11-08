@@ -9962,6 +9962,29 @@ async loadMoreProducts() {
       return;
     }
 
+    // --- LAPISAN 2: Cek ke Firebase RTDB ---
+    try {
+      const bulan = new Date().toISOString().slice(0, 7);
+      const fbUrl = (this._fbConfig && this._fbConfig.databaseURL) || '';
+      const checkUrl = `${fbUrl.replace(/\/$/, '')}/accounting/journal/${bulan}.json?orderBy="ref"&equalTo="SALDO-AWAL-ALL"`;
+
+      const checkRes = await fetch(checkUrl);
+      const existingData = await checkRes.json();
+
+      if (existingData && Object.keys(existingData).length > 0) {
+        this.showToast('Jurnal Saldo Awal sudah ada di database. Proses dibatalkan.', 'error');
+        // Set localStorage agar sinkron jika user ganti device
+        localStorage.setItem('dapur_opening_balance_done', 'true');
+        this.showGenerateSaldoModal = false; // Tutup modal jika terbuka
+        return;
+      }
+    } catch (e) {
+      console.warn('[SALDO-AWAL] Gagal cek database:', e);
+      this.showToast('Gagal memverifikasi status saldo awal. Coba lagi.', 'error');
+      return;
+    }
+    // --- AKHIR LAPISAN 2 ---
+
     if (!this.inventoryList || this.inventoryList.length === 0) {
       this.showToast('Inventory kosong. Import CSV terlebih dahulu sebelum generate saldo awal.', 'error');
       return;
