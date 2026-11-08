@@ -229,7 +229,7 @@ window.kasirApp = () => ({
   lastVisibleProduct: null,
   hasMoreProducts: true,
   isLoadingMoreProducts: false,
-  PRODUCT_LIMIT: 50,
+  PRODUCT_LIMIT: 1000, // ✅ Naikkan limit agar semua produk termuat
 
   // Cart price level: 'ecer' | 'partai' | 'agen'
   cartPriceLevel: 'ecer',
@@ -10129,7 +10129,10 @@ async loadMoreProducts() {
           const minStock = 5;
           // Ambil purchasePrice dari CSV jika tersedia, jika tidak biarkan 0 (jangan ambil dari priceEcer)
           const purchasePriceCsv = row.purchasePrice || row.hargaBeli || '';
-          const itemId = `inv_${slugify(itemName)}_${idx}`;
+          // ✅ FIX: Gunakan ID yang SAMA PERSIS dengan LP (Nama + Supplier)
+          const nameSlug = slugify(itemName);
+          const supplierSlug = slugify(supplier || 'umum');
+          const itemId = `${nameSlug}-${supplierSlug}`;
           console.log(`[TRACE IMPORT] Produk: ${row.name} | Kredit CSV: "${row['Kredit(Y/N)']}" | isCredit Value: ${row.isCredit} (Tipe: ${typeof row.isCredit})`);
           console.log("[BULK-UPLOAD] ID:", row.id, "| purchasePrice:", row.purchasePrice);
 
