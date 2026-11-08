@@ -112,8 +112,8 @@ export async function getProducts({
       queryConstraints.push(startAfter(lastDoc));
     }
 
-    // Batasan jumlah dokumen per halaman
-    const queryLimit = Math.max(1, Math.min(Number(pageSize) || 20, 100));
+    // Batasan jumlah dokumen per halaman — izinkan hingga 500 agar tidak terpotong
+    const queryLimit = Math.max(1, Math.min(Number(pageSize) || 20, 500));
     queryConstraints.push(limit(queryLimit));
 
     const q = query(productsRef, ...queryConstraints);

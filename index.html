@@ -7469,9 +7469,13 @@ git push -u origin main</pre>
         },
 
         getCategoryCount(catId) {
-          if (catId === 'all') return this.menuItems.length;
+          // ✅ FIX: Hanya hitung produk yang tampil di halaman utama
+          const visibleItems = this.menuItems.filter(item => item.showOnMain !== false);
+          
+          if (catId === 'all') return visibleItems.length;
+          
           const sel = String(catId || '').toLowerCase().trim();
-          return this.menuItems.filter(item => {
+          return visibleItems.filter(item => {
             const itemCatId = String(item.categoryId || item.category || '').toLowerCase().trim();
             return itemCatId === sel;
           }).length;
