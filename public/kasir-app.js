@@ -469,7 +469,7 @@ window.kasirApp = () => ({
   voidReasonText: '',
   isVoidProcessing: false,
   inventoryList: [],
-  inventoryLimit: 50,
+  inventoryLimit: 5000,
   inventoryLastKey: null,
   hasMoreInventory: true,
   isLoadingMoreInventory: false,
@@ -6836,10 +6836,10 @@ async loadMoreProducts() {
             });
           }
           this._inventoryAll = invFromRtdb;
-          this.inventoryList = invFromRtdb.slice(0, this.inventoryLimit);
-          this.inventoryLastKey = this.inventoryList[this.inventoryList.length - 1]?.id || null;
-          this.hasMoreInventory = invFromRtdb.length > this.inventoryLimit;
-          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item (total ${invFromRtdb.length}, limit ${this.inventoryLimit})`);
+          this.inventoryList = invFromRtdb;
+          this.inventoryLastKey = invFromRtdb[invFromRtdb.length - 1]?.id || null;
+          this.hasMoreInventory = false;
+          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item (total ${invFromRtdb.length}, semua dimuat)`);
         } catch (e) {
           console.warn('[RTDB-INV] Gagal muat inventory dari RTDB:', e);
         }
@@ -6885,10 +6885,10 @@ async loadMoreProducts() {
             });
           }
           this._inventoryAll = invFromRtdb;
-          this.inventoryList = invFromRtdb.slice(0, this.inventoryLimit);
-          this.inventoryLastKey = this.inventoryList[this.inventoryList.length - 1]?.id || null;
-          this.hasMoreInventory = invFromRtdb.length > this.inventoryLimit;
-          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item (total ${invFromRtdb.length}, limit ${this.inventoryLimit})`);
+          this.inventoryList = invFromRtdb;
+          this.inventoryLastKey = invFromRtdb[invFromRtdb.length - 1]?.id || null;
+          this.hasMoreInventory = false;
+          console.log(`[RTDB-INV] Inventory dimuat dari RTDB '/inventory': ${this.inventoryList.length} item (total ${invFromRtdb.length}, semua dimuat)`);
         } catch (e) {
           console.warn('[RTDB-INV] Gagal muat inventory dari RTDB:', e);
         }
