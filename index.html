@@ -28,7 +28,7 @@
 
   <!-- OpenGraph Social Cards -->
   <meta property="og:title" content="Pusat Material Bangunan & Konstruksi" />
-  <meta property="og:description" content="Suplai semen SNI, besi beton, baja ringan, cat premium, dan pipa. Melayani eceran, borongan kontraktor, dan harga agen." />
+  <meta property="og:description" content="Supply semen SNI, besi beton, baja ringan, cat premium, dan pipa. Melayani eceran, borongan kontraktor, dan harga agen." />
   <meta property="og:image" content="/assets/hero_building_materials.jpg" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="id_ID" />
@@ -630,7 +630,7 @@
             </div>
             <div class="min-w-0">
               <span class="text-xs sm:text-sm block truncate">Supply Proyek</span>
-              <span class="text-[10px] text-stone-500 block font-normal mt-0.5">Suplai bahan bangunan proyek</span>
+              <span class="text-[10px] text-stone-500 block font-normal mt-0.5">Supply bahan bangunan proyek</span>
             </div>
           </button>
 
@@ -710,7 +710,7 @@
         </h1>
 
         <p class="mt-4 sm:mt-6 text-slate-300 text-base sm:text-lg leading-relaxed">
-          Suplai semen SNI, besi beton, baja ringan, cat premium, dan pipa langsung dari distributor utama. Melayani belanja eceran, borongan partai kontraktor, dan harga khusus agen toko bahan bangunan.
+          Supply semen SNI, besi beton, baja ringan, cat premium, dan pipa langsung dari distributor utama. Melayani belanja eceran, borongan partai kontraktor, dan harga khusus agen toko bahan bangunan.
         </p>
 
         <!-- Action Buttons -->
@@ -769,7 +769,7 @@
           :class="activeTab === 'catering' ? 'bg-white text-brand-700 shadow-sm font-bold' : 'text-stone-600 hover:text-stone-900 font-semibold'"
           class="px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-base transition-all flex items-center gap-2 whitespace-nowrap">
           <i class="fa-solid fa-box-open"></i>
-          <span x-text="siteConfig.navCateringText || 'Paket Catering (Silver/Gold/Plat)'"></span>
+          <span x-text="siteConfig.navCateringText || 'Paket Proyek (Silver/Gold/Plat)'"></span>
         </button>
       </div>
 
@@ -846,7 +846,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div>
           <h3 class="font-black text-xl sm:text-2xl text-slate-900">Katalog Material &amp; Bahan Bangunan</h3>
-          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Suplai resmi material SNI: Semen, Besi Beton, Baja Ringan, Cat, &amp; Pipa dengan harga eceran dan grosir bertingkat.</p>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Supply resmi material SNI: Semen, Besi Beton, Baja Ringan, Cat, &amp; Pipa dengan harga eceran dan grosir bertingkat.</p>
         </div>
         <div class="flex items-center gap-3 flex-wrap">
           <div class="text-xs text-slate-500">
@@ -1154,7 +1154,7 @@
     <!-- TAB 2: PAKET CATERING & KALKULATOR KURIR BERDAMPINGAN -->
     <div x-show="activeTab === 'catering'" x-transition id="catering-section" class="space-y-12">
       
-      <!-- 3 Paket Catering Card Grid -->
+      <!-- 3 Paket Proyek Card Grid -->
       <div>
         <div class="text-center max-w-2xl mx-auto mb-8">
           <span class="text-brand-600 font-extrabold text-xs uppercase tracking-wider bg-brand-50 px-3 py-1 rounded-full border border-brand-200" x-text="siteConfig.cateringBadge || 'Pilihan Box Supply Proyek'"></span>
@@ -1222,7 +1222,7 @@
               <i class="fa-solid fa-truck-ramp-box"></i>
               <span>Fitur Otomatis Biteship API</span>
             </div>
-            <h3 class="text-xl sm:text-2xl font-extrabold text-stone-900 font-serif mt-1">Kalkulator Catering & Perbandingan 7 Kurir Berdampingan</h3>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-stone-900 font-serif mt-1">Kalkulator Proyek & Perbandingan 7 Kurir Berdampingan</h3>
             <p class="text-xs sm:text-sm text-stone-500">Tabel horizontal menampilkan perbandingan tarif & estimasi tiba dari 7 kurir seketika.</p>
           </div>
 
@@ -1236,7 +1236,7 @@
           <!-- Input Form Pax & Alamat -->
           <div class="space-y-4 bg-stone-50 p-4 sm:p-5 rounded-xl border border-stone-200">
             <div>
-              <label class="block text-xs font-bold text-stone-700 uppercase mb-1">1. Jumlah Pax (Porsi Box)</label>
+              <label class="block text-xs font-bold text-stone-700 uppercase mb-1">1. Jumlah Pax (Box)</label>
               <div class="flex items-center gap-2">
                 <button @click="cateringPax = Math.max(selectedCateringPackage.minPax, cateringPax - 5); calculateOngkir()" class="w-10 h-10 rounded-lg bg-white border border-stone-300 font-bold hover:bg-stone-100 flex items-center justify-center">-</button>
                 <input type="number" x-model.number="cateringPax" @input="calculateOngkir()" :min="selectedCateringPackage.minPax" class="flex-1 text-center font-black text-lg py-2 rounded-lg border border-stone-300 bg-white" />
@@ -1267,7 +1267,7 @@
                 <span class="font-bold text-brand-600" x-text="selectedCourier ? selectedCourier.courier_name + ' (Estimasi ' + formatRupiah(selectedCourier.price) + ')' : 'Belum dipilih'"></span>
               </div>
               <div class="flex justify-between text-sm font-extrabold text-stone-900 mt-2 pt-2 border-t border-dashed border-stone-300">
-                <span>Total Catering (Makanan Saja):</span>
+                <span>Total Proyek ( Saja):</span>
                 <span class="text-brand-700 font-black text-base" x-text="formatRupiah((cateringPax * selectedCateringPackage.pricePerPax))"></span>
               </div>
             </div>
@@ -1459,8 +1459,8 @@
               </div>
               <div>
                 <label class="block text-xs font-bold text-stone-700 uppercase mb-1">Nomor WhatsApp Aktif *</label>
-                <input type="tel" x-model="customerPhone" @input="checkRtoPhone()" required
-                  :placeholder="isRtoRestricted ? 'Contoh: 6281234567890' : 'Contoh: 081234567890'"
+                <input type="tel" x-model="customerPhone" @input="checkRtoPhone()" 
+              :placeholder="isRtoRestricted ? 'Contoh: 6281234567890' : 'Contoh: 081234567890'"
                   :class="rtoPhoneError ? 'border-red-400 ring-2 ring-red-100' : 'border-stone-300'"
                   class="w-full p-2.5 rounded-xl border text-xs sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
                 <!-- FASE 5: validasi inline format WA 62xxx (mode RTO restricted) -->
@@ -1511,7 +1511,7 @@
 
               <div>
                 <label class="block text-xs font-bold text-stone-700 uppercase mb-1">Catatan Tambahan (Opsional)</label>
-                <input type="text" x-model="orderNotes" placeholder="Contoh: Sambal dipisah, minta sendok..." class="w-full p-2.5 rounded-xl border border-stone-300 text-xs sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                <input type="text" x-model="orderNotes" class="w-full p-2.5 rounded-xl border border-stone-300 text-xs sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
               </div>
             </div>
           </div>
@@ -1547,7 +1547,7 @@
                 </template>
 
                 <div class="pt-3 flex items-center justify-between text-xs text-stone-600">
-                  <span>Subtotal Makanan:</span>
+                  <span>Subtotal :</span>
                   <span class="font-semibold text-stone-900" x-text="formatRupiah(cartSubtotal)"></span>
                 </div>
 
@@ -1568,7 +1568,7 @@
                 </div>
 
                 <div class="pt-3 flex items-center justify-between text-sm sm:text-base font-extrabold text-stone-900 mt-2 border-t border-stone-200">
-                  <span>Total (Hanya Makanan):</span>
+                  <span>Total (Hanya ):</span>
                   <span class="text-brand-700 text-lg sm:text-xl font-black" x-text="formatRupiah(grandTotal)"></span>
                 </div>
               </div>
@@ -1771,7 +1771,7 @@
               </div>
               <div class="overflow-hidden">
                 <span class="block text-xs font-bold text-stone-900 truncate">Instagram</span>
-                <span class="text-[11px] text-stone-500 block truncate">Lihat Foto & Reel Menu</span>
+                <span class="text-[11px] text-stone-500 block truncate">Lihat Foto & Reel Proyek</span>
               </div>
             </a>
 
@@ -1782,7 +1782,7 @@
               </div>
               <div class="overflow-hidden">
                 <span class="block text-xs font-bold text-stone-900 truncate">Facebook</span>
-                <span class="text-[11px] text-stone-500 block truncate">Info Promo & Event Dapur</span>
+                <span class="text-[11px] text-stone-500 block truncate">Info Promo & Event Terbaru</span>
               </div>
             </a>
 
@@ -1793,7 +1793,7 @@
               </div>
               <div class="overflow-hidden">
                 <span class="block text-xs font-bold text-stone-900 truncate">TikTok</span>
-                <span class="text-[11px] text-stone-500 block truncate">Live Masak & Menu Viral</span>
+                <span class="text-[11px] text-stone-500 block truncate">Live Tutorial & Proyek Viral</span>
               </div>
             </a>
 
@@ -2165,7 +2165,7 @@
         </div>
 
         <div class="mt-4 pt-3 border-t border-stone-200 text-xs text-stone-600 flex items-center justify-between">
-          <span>Total Makanan: <strong x-text="formatRupiah(activeOrder.totalAmount || 0)"></strong></span>
+          <span>Total : <strong x-text="formatRupiah(activeOrder.totalAmount || 0)"></strong></span>
           <button @click="downloadReceiptPDF(activeOrder)" :disabled="!activeOrder.orderId" class="text-brand-600 font-bold hover:underline flex items-center gap-1 disabled:opacity-40">
             <i class="fa-solid fa-file-pdf"></i> Unduh Struk PDF
           </button>
@@ -3678,7 +3678,7 @@
           <!-- Section: Catering Packages -->
           <div class="mt-8 bg-stone-50 p-4 rounded-2xl border border-stone-200">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="font-extrabold text-stone-900 text-sm">Paket Catering</h4>
+              <h4 class="font-extrabold text-stone-900 text-sm">Paket Proyek</h4>
               <button @click="cateringPackages.push({ id: 'pkg-' + Date.now(), name: 'Paket Baru', pricePerPax: 20000, minPax: 15, isPopular: false, description: '', items: [] })" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                 <i class="fa-solid fa-plus"></i> Tambah Paket
               </button>
@@ -3947,8 +3947,8 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-stone-700 uppercase mb-1">Tombol CTA 2 (Order Catering)</label>
-              <input type="text" x-model="siteConfig.heroBtn2" placeholder="Order Catering Box" class="w-full p-2 rounded-xl border border-stone-300 text-xs mb-2 bg-stone-50" />
+              <label class="block text-xs font-bold text-stone-700 uppercase mb-1">Tombol CTA 2 (Order Proyek)</label>
+              <input type="text" x-model="siteConfig.heroBtn2" placeholder="Order Proyek Box" class="w-full p-2 rounded-xl border border-stone-300 text-xs mb-2 bg-stone-50" />
               <div class="flex items-center gap-2">
                 <div class="flex items-center gap-1">
                   <input type="color" x-model="siteConfig.heroBtn2Bg" class="w-7 h-7 rounded-lg cursor-pointer" title="Warna Background Tombol" />
@@ -4017,7 +4017,7 @@
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-stone-600 uppercase mb-1">Navigasi 2</label>
-                <input type="text" x-model="siteConfig.navCateringText" placeholder="Paket Catering" class="w-full p-2 rounded-xl border border-stone-300 text-xs bg-stone-50 font-medium" />
+                <input type="text" x-model="siteConfig.navCateringText" placeholder="Paket Proyek" class="w-full p-2 rounded-xl border border-stone-300 text-xs bg-stone-50 font-medium" />
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-stone-600 uppercase mb-1">Navigasi 3</label>
@@ -4025,15 +4025,15 @@
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-stone-600 uppercase mb-1">Navigasi 4</label>
-                <input type="text" x-model="siteConfig.navB2bText" placeholder="Catering B2B" class="w-full p-2 rounded-xl border border-stone-300 text-xs bg-stone-50 font-medium" />
+                <input type="text" x-model="siteConfig.navB2bText" placeholder="Proyek B2B" class="w-full p-2 rounded-xl border border-stone-300 text-xs bg-stone-50 font-medium" />
               </div>
             </div>
           </div>
 
-          <!-- Teks Section Catering & B2B -->
+          <!-- Teks Section Proyek & B2B -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-white p-4 rounded-2xl border border-stone-200 space-y-3">
-              <h5 class="text-xs font-black uppercase text-stone-800 tracking-wider">Teks Section Catering</h5>
+              <h5 class="text-xs font-black uppercase text-stone-800 tracking-wider">Teks Section Proyek</h5>
               <div>
                 <label class="block text-[11px] font-bold text-stone-600 uppercase mb-1">Badge</label>
                 <input type="text" x-model="siteConfig.cateringBadge" placeholder="Pilihan Box Supply Proyek" class="w-full p-2 rounded-xl border border-stone-300 text-xs bg-stone-50" />
@@ -4049,7 +4049,7 @@
             </div>
 
             <div class="bg-white p-4 rounded-2xl border border-stone-200 space-y-3">
-              <h5 class="text-xs font-black uppercase text-stone-800 tracking-wider">Teks Section Catering B2B</h5>
+              <h5 class="text-xs font-black uppercase text-stone-800 tracking-wider">Teks Section Proyek B2B</h5>
               <div>
                 <label class="block text-[11px] font-bold text-stone-600 uppercase mb-1">Badge</label>
                 <input type="text" x-model="siteConfig.b2bBadge" placeholder="Layanan Khusus Corporate & Event" class="w-full p-2 rounded-xl border border-stone-300 text-xs bg-stone-50" />
@@ -5332,7 +5332,7 @@ git push -u origin main</pre>
         </div>
 
         <div class="space-y-3">
-          <label class="block text-xs font-bold text-stone-700 uppercase">Foto Menu Makanan *</label>
+          <label class="block text-xs font-bold text-stone-700 uppercase">Foto Menu  *</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="p-3 bg-stone-50 rounded-xl border border-stone-200">
               <label class="block text-xs font-bold text-stone-700 uppercase mb-1 flex items-center gap-1.5">
@@ -6194,14 +6194,14 @@ git push -u origin main</pre>
           promoRibbonBg: '#0f172a',
           promoRibbonTextColor: '#ffffff',
           navMenuText: 'Katalog Material',
-          navCateringText: 'Suplai Proyek',
+          navCateringText: 'Supply Proyek',
           navOngkirText: 'Cek Ongkir Truk',
           navB2bText: 'Pengadaan Kontraktor',
           heroBadge: 'Distributor Resmi Material SNI & Konstruksi',
           heroTitle1: 'Solusi Bahan Bangunan,',
           heroTitle2: 'Kualitas Teruji untuk Proyek Anda.',
           heroTitle2Color: '#38bdf8',
-          heroDescription: 'Suplai semen SNI, besi beton, baja ringan, cat premium, dan pipa langsung dari distributor utama. Melayani belanja eceran, borongan partai kontraktor, dan harga khusus agen toko bahan bangunan.',
+          heroDescription: 'Supply semen SNI, besi beton, baja ringan, cat premium, dan pipa langsung dari distributor utama. Melayani belanja eceran, borongan partai kontraktor, dan harga khusus agen toko bahan bangunan.',
           heroBtn1: 'Katalog Material',
           heroBtn1Bg: '#1d4ed8',
           heroBtn1TextColor: '#ffffff',
@@ -6213,10 +6213,10 @@ git push -u origin main</pre>
           heroOverlayColor: '#0f172a',
           heroImageOpacity: 0.65,
           menuSectionTitle: 'Katalog Material & Bahan Bangunan',
-          menuSectionSubtitle: 'Suplai resmi material SNI: Semen, Besi Beton, Baja Ringan, Cat, & Pipa dengan harga eceran dan grosir bertingkat.',
+          menuSectionSubtitle: 'Supply resmi material SNI: Semen, Besi Beton, Baja Ringan, Cat, & Pipa dengan harga eceran dan grosir bertingkat.',
           menuItemsPerPage: 12,
           showMenuStockOnMain: false,
-          cateringBadge: 'Pilihan Paket Suplai Proyek',
+          cateringBadge: 'Pilihan Paket Supply Proyek',
           cateringTitle: 'Paket Material Pondasi & Rangka Atap',
           cateringSubtitle: 'Solusi borongan terpadu untuk renovasi rumah, ruko, gedung, dan fasilitas komersial.',
           b2bBadge: 'Layanan Kontraktor & Developer Proyek',
@@ -6441,7 +6441,7 @@ git push -u origin main</pre>
           totalAmount: 0
         },
 
-        // Form Catering B2B
+        // Form Proyek B2B
         b2bForm: {
           company: '',
           pic: '',
@@ -6467,7 +6467,7 @@ git push -u origin main</pre>
         // Kategori Material — dimuat dari Firebase RTDB (menu_categories)
         menuCategories: [],
 
-        // 3 Paket Catering
+        // 3 Paket Proyek
         cateringPackages: [
           {
             id: 'silver',
@@ -6526,8 +6526,8 @@ git push -u origin main</pre>
         // DAFTAR TARIF 7 KURIR BERDAMPINGAN DARI BITESHIP PROXY
         courierRates: [
           { courier_code: 'pickup', courier_name: 'Ambil Sendiri', courier_service_name: 'Diambil di Toko', price: 0, estimated_etd: 'Kapan Saja', badge_color: 'border-blue-500 text-blue-700 bg-blue-50', icon: 'fa-person-walking-luggage', recommended: true },
-          { courier_code: 'gosend', courier_name: 'GoSend', courier_service_name: 'Instant (Motor/Mobil)', price: 15000, estimated_etd: '1 - 2 Jam (Saran Makanan Panas)', badge_color: 'border-emerald-500 text-emerald-700 bg-emerald-50', icon: 'fa-motorcycle', recommended: false },
-          { courier_code: 'grab', courier_name: 'GrabExpress', courier_service_name: 'Same Day Makanan', price: 14000, estimated_etd: '2 - 4 Jam', badge_color: 'border-green-500 text-green-700 bg-green-50', icon: 'fa-route', recommended: false },
+          { courier_code: 'gosend', courier_name: 'GoSend', courier_service_name: 'Instant (Motor/Mobil)', price: 15000, estimated_etd: '1 - 2 Jam (Saran  Panas)', badge_color: 'border-emerald-500 text-emerald-700 bg-emerald-50', icon: 'fa-motorcycle', recommended: false },
+          { courier_code: 'grab', courier_name: 'GrabExpress', courier_service_name: 'Same Day ', price: 14000, estimated_etd: '2 - 4 Jam', badge_color: 'border-green-500 text-green-700 bg-green-50', icon: 'fa-route', recommended: false },
           { courier_code: 'jnt', courier_name: 'J&T Express', courier_service_name: 'EZ Reguler (Pack Box)', price: 12000, estimated_etd: 'Besok Sampai (1 Hari)', badge_color: 'border-red-500 text-red-700 bg-red-50', icon: 'fa-bolt', recommended: false },
           { courier_code: 'sicepat', courier_name: 'SiCepat', courier_service_name: 'BEST (Besok Sampai)', price: 13000, estimated_etd: 'Besok Sampai (1 Hari)', badge_color: 'border-orange-500 text-orange-700 bg-orange-50', icon: 'fa-gauge-high', recommended: false },
           { courier_code: 'jne', courier_name: 'JNE', courier_service_name: 'YES (Yakin Esok Sampai)', price: 15000, estimated_etd: '1 Hari Kerja', badge_color: 'border-blue-500 text-blue-700 bg-blue-50', icon: 'fa-truck-fast', recommended: false },
@@ -7211,14 +7211,14 @@ git push -u origin main</pre>
 
           const recipe = recList.find(r => r && (r.menuId === menuItem.id || r.id === menuItem.id));
           if (recipe && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
-            let minPorsi = Infinity;
+            let min= Infinity;
             for (const ing of recipe.ingredients) {
               const inv = invList.find(i => i && i.id === ing.itemId);
-              if (!inv) { minPorsi = 0; break; }
+              if (!inv) { min= 0; break; }
               const rawStock = (inv.stock !== undefined && inv.stock !== null) ? inv.stock : (inv.stok || 0);
               const stockVal = Number(rawStock);
               const amountPer = Number(ing.amount) || 0;
-              if (!Number.isFinite(stockVal) || amountPer <= 0) { minPorsi = 0; break; }
+              if (!Number.isFinite(stockVal) || amountPer <= 0) { min= 0; break; }
               let availableAmount = stockVal;
               const iu = String(inv.unit || '').toLowerCase();
               const gu = String(ing.unit || '').toLowerCase();
@@ -7227,9 +7227,9 @@ git push -u origin main</pre>
               else if (iu === 'liter' && gu === 'ml') availableAmount = availableAmount * 1000;
               else if (iu === 'ml' && gu === 'liter') availableAmount = availableAmount / 1000;
               const porsi = Math.floor(availableAmount / amountPer);
-              if (porsi < minPorsi) minPorsi = porsi;
+              if (porsi < minPorsi) min= porsi;
             }
-            if (Number.isFinite(minPorsi) && minPorsi !== Infinity) {
+            if (Number.isFinite(minPorsi) && min!== Infinity) {
               return { stock: Math.max(0, minPorsi), unit: '', name: 'porsi' };
             }
           }
@@ -8645,7 +8645,7 @@ git push -u origin main</pre>
             `👤 PIC: ${this.b2bForm.pic}\n` +
             `📞 No. WhatsApp: ${this.b2bForm.phone}\n` +
             `📍 Alamat: ${this.b2bForm.address}\n` +
-            `📦 Jumlah Porsi: ${this.b2bForm.quantity} Box\n` +
+            `📦 Jumlah: ${this.b2bForm.quantity} Box\n` +
             `📅 Tanggal Acara: ${this.b2bForm.eventDate}\n` +
             `📝 Catatan Tambahan: ${this.b2bForm.notes || '-'}\n\n` +
             `Mohon penawaran harga resmi & invoice faktur. Terima kasih!`;
@@ -8703,7 +8703,7 @@ git push -u origin main</pre>
 
             doc.text(`Tanggal Acara: ${this.b2bForm.eventDate}`, 20, y);
             y += 8;
-            doc.text(`Jumlah Porsi: ${this.b2bForm.quantity} Box`, 20, y);
+            doc.text(`Jumlah: ${this.b2bForm.quantity} Box`, 20, y);
             y += 8;
             
             const notesLines = doc.splitTextToSize(`Catatan Tambahan: ${this.b2bForm.notes || '-'}`, 170);
@@ -8715,7 +8715,7 @@ git push -u origin main</pre>
             doc.setFontSize(10);
             doc.text("* Formulir ini dihasilkan secara otomatis oleh sistem.", 20, y);
 
-            doc.save(`Formulir_Catering_B2B_${this.b2bForm.company.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+            doc.save(`Formulir_Proyek_B2B_${this.b2bForm.company.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
           } catch (e) {
             console.error("Gagal men-generate PDF:", e);
             this.showToast("Terjadi kesalahan saat mengunduh PDF.");
