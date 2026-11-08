@@ -2651,6 +2651,18 @@ async loadMoreProducts() {
       this.playSound('success');
       console.log(`[SYNC-STOK] ✅ ${mergedList.length} item berhasil ditulis ke Firestore products`);
       console.log('[SYNC-STOK] ============================================');
+
+      // ✅ Refresh katalog menu dari sumber asli agar tab Transaksi tetap utuh
+      // (tidak mengubah this.menuList di sini — hanya memuat ulang dari Firestore)
+      try {
+        if (typeof this.listenMenuItems === 'function') {
+          await this.listenMenuItems();
+          console.log('[SYNC-STOK] Katalog menu difresh dari sumber asli');
+        }
+      } catch (refreshErr) {
+        console.warn('[SYNC-STOK] Gagal refresh katalog menu:', refreshErr.message);
+      }
+
       return true;
     } catch (e) {
       console.warn('[SYNC-STOK] ❌ Gagal:', e);
