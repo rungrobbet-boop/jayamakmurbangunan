@@ -2653,43 +2653,25 @@ async loadMoreProducts() {
       this.showToast(`✅ Stok sinkron: ${mergedList.length} item ke Firestore products`, 'success');
       this.playSound('success');
       console.log(`[SYNC-STOK] ✅ ${mergedList.length} item berhasil ditulis ke Firestore products`);
-      console.log('[SYNC-STOK] ============================================');
-
-      // ✅ Inject data stok baru ke menuList lokal agar katalog transaksi tetap utuh
-      // tanpa memanggil listenMenuItems() yang dapat menyebabkan freeze/infinite loop
-      if ((this.menuList || []).length === 0) {
-        // Katalog belum ada — muat dari sumber asli (aman, hanya sekali)
-        try {
-          if (typeof this.listenMenuItems === 'function') {
-            await this.listenMenuItems();
-            console.log('[SYNC-STOK] Katalog menu difresh dari sumber asli (kosong sebelumnya)');
+      // Sync berhasil. Perbarui state lokal menuList TANPA memicu fetch ulang ke Firestore
+      if (Array.isArray(this.menuList) && this.menuList.length > 0) {
+        let updatedCount = 0;
+        this.menuList.forEach((menuItem) => {
+          const syncedItem = mergedList.find((m) => String(m.id) === String(menuItem.id));
+          if (syncedItem) {
+            menuItem.stock = syncedItem.stock;
+            menuItem.stok = syncedItem.stok;
+            // Pastikan di memori kasir juga tetap Ready to Sell
+            menuItem.isReadyToSell = true;
+            updatedCount++;
           }
-        } catch (refreshErr) {
-          console.warn('[SYNC-STOK] Gagal refresh katalog menu:', refreshErr.message);
-        }
-      } else {
-        // Katalog sudah ada — injeksi lokal stok + isReadyToSell tanpa memanggil listenMenuItems
-        const mergedMap = new Map();
-        mergedList.forEach((item) => {
-          if (item.id) mergedMap.set(String(item.id), item);
         });
-
-        this.menuList = (this.menuList || []).map((menuItem) => {
-          if (!menuItem || !menuItem.id) return menuItem;
-          const synced = mergedMap.get(String(menuItem.id));
-          if (synced) {
-            return {
-              ...menuItem,
-              stock: synced.stock,
-              stok: synced.stok,
-              isReadyToSell: true,
-            };
-          }
-          return menuItem;
-        });
-
-        // Paksa Alpine.js render ulang
+        // Paksa Alpine.js render ulang agar tab Transaksi langsung menampilkan produk
         this.menuList = [...this.menuList];
+        console.log(`[SYNC-STOK] ✅ UI Kasir di-refresh secara lokal: ${updatedCount} produk siap jual.`);
+      } else {
+        // Jika menuList benar-benar kosong (misal habis refresh browser), baru panggil ulang
+        await this.listenMenuItems();
       }
 
       return true;
