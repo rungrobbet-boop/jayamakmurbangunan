@@ -7420,6 +7420,7 @@ async loadMoreProducts() {
   async autoCreatePurchaseJournal({ date, desc, amount, paymentMethod = 'cash', ref = '' }) {
     if (!amount || amount <= 0) return;
     const dateStr = date || new Date().toISOString().slice(0, 10);
+    const bulan = dateStr.slice(0, 7);
     const journalId = 'JRN-' + Date.now();
     const refStr = ref || ('INV-' + dateStr.replace(/-/g, '') + '-' + Math.random().toString(36).substring(2, 6).toUpperCase());
 
@@ -7442,6 +7443,7 @@ async loadMoreProducts() {
       ref: refStr,
       status: 'approved',
       timestamp: Date.now(),
+      paymentMethod: pm,
       lines: [
         { acc: '105', name: 'Persediaan Bahan Baku', debit: Number(amount), credit: 0 },
         { acc: creditAcc, name: creditAccName, debit: 0, credit: Number(amount) }
@@ -7449,7 +7451,7 @@ async loadMoreProducts() {
     };
 
     try {
-      await fetch(`/accounting/journal`, {
+      await fetch(`/accounting/journal/${bulan}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(journalPayload)
@@ -7466,6 +7468,7 @@ async loadMoreProducts() {
   async autoCreateWasteJournal({ date, desc, amount, ref = '' }) {
     if (!amount || amount <= 0) return;
     const dateStr = date || new Date().toISOString().slice(0, 10);
+    const bulan = dateStr.slice(0, 7);
     const journalId = 'JRN-' + Date.now();
     const refStr = ref || ('WST-' + dateStr.replace(/-/g, '') + '-' + Math.random().toString(36).substring(2, 6).toUpperCase());
 
@@ -7484,7 +7487,7 @@ async loadMoreProducts() {
     };
 
     try {
-      await fetch(`/accounting/journal`, {
+      await fetch(`/accounting/journal/${bulan}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(journalPayload)
@@ -8067,12 +8070,39 @@ async loadMoreProducts() {
         amount: totalValue,
         paymentMethod: this.stockChangePaymentMethod || 'cash'
       });
+
+      // FIFO: Buat batch baru jika stok bertambah (Pembelian/Restock)
+      try {
+        const batchId = `BATCH-EDIT-${Date.now()}`;
+        const batchData = {
+          batchId: batchId,
+          productId: this.selectedStockItem.id,
+          dateIn: Date.now(),
+          qtyIn: diff,
+          qtyRemaining: diff,
+          costPerUnit: Number(this.selectedStockItem.purchasePrice) || 0,
+          source: 'edit-stock-purchase'
+        };
+        await this._fbSet(this._fbRef(this._fbDb, `stock_batches/${this.selectedStockItem.id}/${batchId}`), batchData);
+        console.log(`[FIFO-EDIT] ✅ Batch baru dibuat: ${batchId} @ Rp ${batchData.costPerUnit}`);
+      } catch (e) {
+        console.warn('[FIFO-EDIT] Gagal buat batch:', e);
+      }
     } else if (this.stockChangeType === 'waste' && diff < 0 && totalValue > 0) {
       await this.autoCreateWasteJournal({
         date: new Date().toISOString().slice(0, 10),
         desc: `Bahan rusak/expired: ${this.selectedStockItem.name} ${Math.abs(diff)} ${this.selectedStockItem.unit}`,
         amount: totalValue
       });
+
+      // FIFO: Potong batch untuk waste (stok berkurang)
+      try {
+        const qtyToCut = Math.abs(diff);
+        const fifoResult = await this.processFifoSale([{ id: this.selectedStockItem.id, qty: qtyToCut }]);
+        console.log(`[FIFO-WASTE] ✅ Batch dipotong untuk waste: ${qtyToCut} unit, HPP: ${fifoResult.totalHpp}`);
+      } catch (e) {
+        console.warn('[FIFO-WASTE] Gagal potong batch:', e);
+      }
     }
 
     if (item && this.selectedStockItem) {
