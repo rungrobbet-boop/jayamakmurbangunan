@@ -1888,51 +1888,69 @@ window.accountingApp = function() {
       const search = String(this.jurnalSearch || '').toLowerCase().trim();
       const filterDate = String(this.journalFilterDate || '').trim();
 
-      // Normalisasi setiap entri jurnal: tambahkan debitCode/creditCode/debitAmount/creditAmount/debitName/creditName
-      // dari struktur lines (backend) agar tabel Jurnal Umum dapat menampilkan Debit/Kredit dengan benar
-      const normalized = list.map(j => {
-        if (!j) return j;
+      // Bangun satu baris per line jurnal agar SETIAP line (debit maupun kredit)
+      // muncul di tabel Jurnal Umum. Entri dengan banyak lines tidak akan buang baris.
+      const rows = [];
+      list.forEach((j, jIdx) => {
+        if (!j) return;
 
-        // Jika sudah punya flat fields, gunakan langsung
-        if (j.debitCode && j.creditCode) return j;
+        const base = {
+          date: j.date || '',
+          noEntry: j.noEntry || '',
+          desc: j.desc || '',
+          ref: j.ref || '-',
+        };
 
-        // Jika pakai struktur lines, extract debit dan credit
-        if (Array.isArray(j.lines)) {
-          const debitLine = j.lines.find(l => Number(l.debit) > 0) || {};
-          const creditLine = j.lines.find(l => Number(l.credit) > 0) || {};
-
-          return {
-            ...j,
-            debitCode: debitLine.acc || debitLine.code || '',
-            debitName: debitLine.name || '',
-            debitAmount: Number(debitLine.debit) || 0,
-            creditCode: creditLine.acc || creditLine.code || '',
-            creditName: creditLine.name || '',
-            creditAmount: Number(creditLine.credit) || 0,
-          };
+        if (Array.isArray(j.lines) && j.lines.length > 0) {
+          j.lines.forEach((line, idx) => {
+            const dAmt = Number(line.debit || 0);
+            const cAmt = Number(line.credit || 0);
+            const isDebit = dAmt > 0;
+            const isCredit = cAmt > 0;
+            rows.push({
+              id: `${j.id || jIdx}-line-${idx}`,
+              ...base,
+              debitCode: line.acc || line.code || '',
+              debitName: line.name || '',
+              debitAmount: isDebit ? dAmt : 0,
+              creditCode: isCredit ? (line.acc || line.code || '') : '',
+              creditName: isCredit ? (line.name || '') : '',
+              creditAmount: isCredit ? cAmt : 0,
+            });
+          });
+        } else if (j.debitCode || j.creditCode) {
+          // Entri flat (sudah normalized): satu baris
+          rows.push({
+            id: j.id || `flat-${jIdx}`,
+            ...base,
+            debitCode: j.debitCode || '',
+            debitName: j.debitName || '',
+            debitAmount: Number(j.debitAmount) || 0,
+            creditCode: j.creditCode || '',
+            creditName: j.creditName || '',
+            creditAmount: Number(j.creditAmount) || 0,
+          });
         }
-
-        return j;
       });
 
-      return normalized.filter(j => {
-        if (!j) return false;
+      return rows.filter(r => {
+        if (!r) return false;
         // Filter akun
         if (filterAkun !== 'all') {
-          const matchDebit = String(j.debitCode || '') === filterAkun;
-          const matchCredit = String(j.creditCode || '') === filterAkun;
+          const matchDebit = String(r.debitCode || '') === filterAkun;
+          const matchCredit = String(r.creditCode || '') === filterAkun;
           if (!matchDebit && !matchCredit) return false;
         }
         // Filter tanggal
         if (filterDate) {
-          const jDate = String(j.date || '').slice(0, 10);
-          if (jDate !== filterDate) return false;
+          const rDate = String(r.date || '').slice(0, 10);
+          if (rDate !== filterDate) return false;
         }
         // Filter search
         if (search) {
-          const desc = String(j.desc || '').toLowerCase();
-          const ref = String(j.ref || '').toLowerCase();
-          const noEntry = String(j.noEntry || '').toLowerCase();
+          const desc = String(r.desc || '').toLowerCase();
+          const ref = String(r.ref || '').toLowerCase();
+          const noEntry = String(r.noEntry || '').toLowerCase();
           if (!desc.includes(search) && !ref.includes(search) && !noEntry.includes(search)) return false;
         }
         return true;
