@@ -723,8 +723,12 @@ window.kasirApp = () => ({
     phone: '0812-3456-7890',
     logoUrl: ''
   },
+  // ✅ FIX BUG 1: State siteConfig (admin password dari Admin Panel)
+  siteConfig: {
+    adminPassword: 'Dear2226'
+  },
 
- // State Payment Config dari Admin Panel (/site_config/paymentConfig)
+// State Payment Config dari Admin Panel (/site_config/paymentConfig)
   paymentConfig: {
     bankName: 'BCA',
     bankAccountNumber: '-',
@@ -905,6 +909,11 @@ try {
             ...val.paymentConfig
           };
           console.log('[KASIR] Payment config loaded:', this.paymentConfig.bankName);
+          // ✅ FIX BUG 1: Load Admin Password dari Firebase
+          if (val.adminPassword) {
+            this.siteConfig.adminPassword = String(val.adminPassword).trim();
+            console.log('[KASIR] ✅ Admin Password loaded from Firebase');
+          }
            // 🔒 Load Supervisor PIN dari /site_config/supervisorPin
                 if (val.supervisorPin) {
           this.supervisorPin = String(val.supervisorPin).trim();
