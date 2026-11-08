@@ -7287,12 +7287,13 @@ git push -u origin main</pre>
         },
 
         get filteredMenuItems() {
-          // Dedup by ID — cegah produk feeder/CSV duplikat muncul berulang di landing page
-          const seenIds = new Set();
+          // ✅ FIX: Deduplikasi berdasarkan Nama + Supplier
+          const seenKeys = new Set();
           const deduped = [];
           for (const item of this.menuItems) {
-            if (item.id && seenIds.has(item.id)) continue;
-            seenIds.add(item.id);
+            const uniqueKey = `${String(item.name || '').toLowerCase().trim()}_${String(item.supplier || '').toLowerCase().trim()}`;
+            if (seenKeys.has(uniqueKey)) continue;
+            seenKeys.add(uniqueKey);
             deduped.push(item);
           }
           const visible = deduped.filter(item => item.showOnMain !== false);
@@ -9743,13 +9744,10 @@ git push -u origin main</pre>
                 c.id === item.categoryId || c.name === item.categoryId || c.id === item.category || c.name === item.category
               );
 
-              // ✅ FIX: Gunakan ID dari CSV, atau buat dari NAMA + SUPPLIER agar tidak duplikat
-              let finalId = item.id;
-              if (!finalId) {
-                const nameSlug = slugify(item.name);
-                const supplierSlug = slugify(item.supplier || 'umum');
-                finalId = `${nameSlug}-${supplierSlug}`;
-              }
+              // ✅ FIX MUTLAK: Abaikan ID dari CSV, SELALU buat ID dari Nama + Supplier
+              const nameSlug = slugify(item.name);
+              const supplierSlug = slugify(item.supplier || 'umum');
+              const finalId = `${nameSlug}-${supplierSlug}`;
 
               return {
                 ...item,
