@@ -8287,24 +8287,38 @@ async loadMoreProducts() {
   openProductRecipeModal(menu, isReadOnly = false) {
     if (!menu) return;
     this.isReadOnlyMode = isReadOnly;
-    this.selectedProductForRecipe = menu;
-    const existingRecipe = this.menuRecipes[menu.id] || { ingredients: [] };
+
+    // ✅ FIX: Gabungkan data dari menuList (harga lengkap) dan inventoryList (stok live)
+    let finalData = { ...menu };
+    if (menu.linkedMenuId) {
+        const linkedProduct = (this.menuList || []).find(m => m.id === menu.linkedMenuId);
+        if (linkedProduct) finalData = { ...linkedProduct, stock: menu.stock };
+    } else if (menu.inventoryId) {
+        const invItem = (this.inventoryList || []).find(i => i.id === menu.inventoryId);
+        if (invItem) finalData.stock = invItem.stock;
+    } else {
+        const invItem = (this.inventoryList || []).find(i => i.id === menu.id);
+        if (invItem) finalData.stock = invItem.stock;
+    }
+
+    this.selectedProductForRecipe = finalData;
+    const existingRecipe = this.menuRecipes[finalData.id] || { ingredients: [] };
     
     this.recipeForm = {
-      id: menu.id, // ✅ FIX: Tambahkan ini agar judul modal mendeteksi mode Edit
-      menuId: menu.id,
-      name: menu.name || '',
-      supplier: menu.supplier || '',
-      categoryId: menu.categoryId || menu.category || 'bahan_bangunan',
-      priceEcer: Number(menu.priceEcer || menu.price) || 0,
-      pricePartai: Number(menu.pricePartai) || 0,
-      priceAgen: Number(menu.priceAgen) || 0,
-      minOrderPartai: Number(menu.minOrderPartai ?? 0),
-      minOrderAgen: Number(menu.minOrderAgen ?? 0),
-      unit: menu.unit || 'pcs',
-      stock: Number(menu.stock || menu.stok) || 0,
-      favoriteOrder: menu.favoriteOrder || 0,
-      imageUrl: menu.imageUrl || menu.image || '',
+      id: finalData.id,
+      menuId: finalData.id,
+      name: finalData.name || '',
+      supplier: finalData.supplier || '',
+      categoryId: finalData.categoryId || finalData.category || 'bahan_bangunan',
+      priceEcer: Number(finalData.priceEcer || finalData.price) || 0,
+      pricePartai: Number(finalData.pricePartai) || 0,
+      priceAgen: Number(finalData.priceAgen) || 0,
+      minOrderPartai: Number(finalData.minOrderPartai) || 0,
+      minOrderAgen: Number(finalData.minOrderAgen) || 0,
+      unit: finalData.unit || 'pcs',
+      stock: Number(finalData.stock || finalData.stok) || 0,
+      favoriteOrder: finalData.favoriteOrder || 0,
+      imageUrl: finalData.imageUrl || finalData.image || '',
       ingredients: JSON.parse(JSON.stringify(existingRecipe.ingredients || []))
     };
     this.productModal = true;
