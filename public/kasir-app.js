@@ -10167,10 +10167,24 @@ async loadMoreProducts() {
           const minStock = 5;
           // Ambil purchasePrice dari CSV jika tersedia, jika tidak biarkan 0 (jangan ambil dari priceEcer)
           const purchasePriceCsv = row.purchasePrice || row.hargaBeli || '';
-          // ✅ FIX: Gunakan ID yang SAMA PERSIS dengan LP (Nama + Supplier)
-          const nameSlug = slugify(itemName);
-          const supplierSlug = slugify(supplier || 'umum');
-          const itemId = `${nameSlug}-${supplierSlug}`;
+          // ✅ FIX: Cek dulu apakah produk dengan nama DAN supplier yang sama sudah ada di inventoryList
+          let existing = this.inventoryList.find(
+            inv =>
+              inv.name &&
+              inv.name.toLowerCase() === itemName.toLowerCase() &&
+              inv.supplier &&
+              inv.supplier.toLowerCase() === supplier.toLowerCase()
+          );
+          let itemId;
+          if (existing) {
+            // Produk sudah ada, gunakan ID lama agar tidak menimpa atau membuat duplikat
+            itemId = existing.id;
+          } else {
+            // Produk baru, buat ID unik dengan timestamp agar tidak bertabrakan dengan produk lama
+            const nameSlug = slugify(itemName);
+            const supplierSlug = slugify(supplier || 'umum');
+            itemId = `${nameSlug}-${supplierSlug}-${Date.now().toString().slice(-4)}`;
+          }
           console.log(`[TRACE IMPORT] Produk: ${row.name} | Kredit CSV: "${row['Kredit(Y/N)']}" | isCredit Value: ${row.isCredit} (Tipe: ${typeof row.isCredit})`);
           console.log("[BULK-UPLOAD] ID:", row.id, "| purchasePrice:", row.purchasePrice);
 
@@ -10183,9 +10197,7 @@ async loadMoreProducts() {
             minAgenDariCSV: row.minOrderAgen
           });
 
-          // Cari item yang ada (cocokkan via nama)
-          let existing = this.inventoryList.find(inv => (inv.name && inv.name.toLowerCase() === itemName.toLowerCase()));
-
+          // Cari item yang ada (cocokkan via nama + supplier - sudah dicari di atas)
           if (existing) {
             const oldStock = Number(existing.stock || existing.stok || 0);
             existing.stock = stock;
