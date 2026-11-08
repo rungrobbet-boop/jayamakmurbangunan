@@ -1748,7 +1748,7 @@ try {
             imageUrl: data.imageUrl || data.image || '',
             sku: data.sku || '',
             barcode: data.barcode || '',
-            isReadyToSell: Boolean(data.isReadyToSell) || false,
+            isReadyToSell: data.isReadyToSell !== undefined ? Boolean(data.isReadyToSell) : true,
             linkedMenuId: data.linkedMenuId || null,
             isCredit: data.isCredit === true || data.isCredit === 'true' || data.isCredit === 1 || data.isCredit === 'Y' || Boolean(data.isCredit),
           });
