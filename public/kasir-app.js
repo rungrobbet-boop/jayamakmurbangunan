@@ -2652,16 +2652,28 @@ async loadMoreProducts() {
       console.log(`[SYNC-STOK] ✅ ${mergedList.length} item berhasil ditulis ke Firestore products`);
       console.log('[SYNC-STOK] ============================================');
 
-      // ✅ Refresh katalog menu dari sumber asli agar tab Transaksi tetap utuh
-      // (tidak mengubah this.menuList di sini — hanya memuat ulang dari Firestore)
-      try {
-        if (typeof this.listenMenuItems === 'function') {
-          await this.listenMenuItems();
-          console.log('[SYNC-STOK] Katalog menu difresh dari sumber asli');
+      // ✅ Inject data stok baru ke menuList lokal agar katalog transaksi tetap utuh
+      // tanpa memanggil listenMenuItems() yang dapat menyebabkan freeze/infinite loop
+      const mergedMap = new Map();
+      mergedList.forEach((item) => {
+        if (item.id) mergedMap.set(String(item.id), item);
+      });
+
+      this.menuList = (this.menuList || []).map((menuItem) => {
+        if (!menuItem || !menuItem.id) return menuItem;
+        const synced = mergedMap.get(String(menuItem.id));
+        if (synced) {
+          return {
+            ...menuItem,
+            stock: synced.stock,
+            stok: synced.stok,
+          };
         }
-      } catch (refreshErr) {
-        console.warn('[SYNC-STOK] Gagal refresh katalog menu:', refreshErr.message);
-      }
+        return menuItem;
+      });
+
+      // Paksa Alpine.js render ulang
+      this.menuList = [...this.menuList];
 
       return true;
     } catch (e) {
