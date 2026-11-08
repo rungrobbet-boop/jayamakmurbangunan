@@ -2491,8 +2491,8 @@
                 <!-- Info Saldo Kas Tersedia -->
                 <div class="p-2.5 rounded-xl bg-stone-100 border border-stone-200 space-y-1">
                   <div class="flex justify-between items-center text-[11px] text-stone-500 font-medium">
-                    <span>Saldo Kas Tersedia</span>
-                    <span class="font-bold text-stone-700" x-text="formatRupiah(getSaldoKasLaci())"></span>
+                    <span x-text="'Saldo Kas Tersedia (' + (pembelianForm.paymentMethod === 'cash' && pembelianForm.cashSource === 'laci' ? 'Laci' : 'Pusat') + ')'"></span>
+                    <span class="font-bold text-stone-700" x-text="formatRupiah(pembelianForm.paymentMethod === 'cash' && pembelianForm.cashSource === 'laci' ? getSaldoKasLaci() : getCashInHand())"></span>
                   </div>
                 </div>
 
@@ -2524,6 +2524,19 @@
                       <span>Hutang</span>
                       <span class="text-[9px] opacity-80">(Supplier 2001)</span>
                     </button>
+                  </div>
+                </div>
+
+                <!-- ✅ Sumber Dana Tunai (Hanya muncul jika Tunai) -->
+                <div x-show="pembelianForm.paymentMethod === 'cash'" x-transition class="mt-2 p-2.5 bg-stone-50 border border-stone-200 rounded-xl space-y-2">
+                  <label class="block font-bold text-[11px] text-stone-700 uppercase">Sumber Dana Tunai</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button type="button" @click="pembelianForm.cashSource = 'laci'"
+                      :class="pembelianForm.cashSource === 'laci' ? 'bg-emerald-600 text-white' : 'bg-white text-stone-600 border border-stone-300'"
+                      class="py-1.5 rounded-lg text-xs font-bold transition">Laci Kasir</button>
+                    <button type="button" @click="pembelianForm.cashSource = 'pusat'"
+                      :class="pembelianForm.cashSource === 'pusat' ? 'bg-emerald-600 text-white' : 'bg-white text-stone-600 border border-stone-300'"
+                      class="py-1.5 rounded-lg text-xs font-bold transition">Kas Pusat (Acc)</button>
                   </div>
                 </div>
 

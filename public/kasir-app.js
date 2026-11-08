@@ -592,6 +592,7 @@ window.kasirApp = () => ({
     purchasePrice: 0,
     total: 0,
     paymentMethod: 'cash',
+    cashSource: 'laci',
     notes: '',
     receiptImage: ''
   },
@@ -7575,10 +7576,18 @@ async loadMoreProducts() {
     
     // Validasi saldo kas untuk pembelian tunai
     if (paymentMethod === 'cash' || paymentMethod === 'tunai') {
-      const saldoKas = this.getSaldoKasLaci();
-      if (totalBeli > saldoKas) {
-        this.showToast(`❌ Kas tidak cukup! Total beli Rp ${this.formatRupiah(totalBeli)} melebihi saldo kas Rp ${this.formatRupiah(saldoKas)}`, 'error');
+      const isLaci = this.pembelianForm.cashSource === 'laci';
+      const saldoTersedia = isLaci ? this.getSaldoKasLaci() : this.getCashInHand();
+      const sumberDanaStr = isLaci ? 'Laci Kasir' : 'Kas Pusat (Accounting)';
+
+      if (totalBeli > saldoTersedia) {
+        this.showToast(`❌ Saldo ${sumberDanaStr} tidak cukup! Total beli Rp ${this.formatRupiah(totalBeli)} melebihi saldo Rp ${this.formatRupiah(saldoTersedia)}`, 'error');
         return;
+      }
+
+      // Jika menggunakan laci kasir, catat sebagai pengeluaran shift
+      if (isLaci) {
+        this.shiftSummary.cashExpenses = (this.shiftSummary.cashExpenses || 0) + totalBeli;
       }
     }
     
