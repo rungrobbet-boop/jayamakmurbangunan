@@ -6103,6 +6103,7 @@ git push -u origin main</pre>
         const categoryId = row.categoryId || row.category || '';
 
         parsed.push({
+          id: String(row.id || '').trim(), // ✅ FIX: Baca ID dari CSV
           name: String(row.name || ''),
           supplier: String(row.supplier || ''),
           category: String(categoryId),
@@ -7305,9 +7306,9 @@ git push -u origin main</pre>
           });
 
           if (this.selectedCategory === 'all' || this.selectedCategory === 'semua') return afterSearch;
-          const sel = String(this.selectedCategory || '').toLowerCase();
+          const sel = String(this.selectedCategory || '').toLowerCase().trim();
           return afterSearch.filter(item => {
-            const itemCatId = String(item.categoryId || item.category || item.categoryLabel || '').toLowerCase();
+            const itemCatId = String(item.categoryId || item.category || item.categoryLabel || '').toLowerCase().trim();
             return itemCatId === sel;
           });
         },
@@ -7468,9 +7469,9 @@ git push -u origin main</pre>
 
         getCategoryCount(catId) {
           if (catId === 'all') return this.menuItems.length;
-          const sel = String(catId || '').toLowerCase();
+          const sel = String(catId || '').toLowerCase().trim();
           return this.menuItems.filter(item => {
-            const itemCatId = String(item.categoryId || item.category || '').toLowerCase();
+            const itemCatId = String(item.categoryId || item.category || '').toLowerCase().trim();
             return itemCatId === sel;
           }).length;
         },
@@ -9227,7 +9228,7 @@ git push -u origin main</pre>
             if (Array.isArray(this.menuItems)) {
               this.menuItems.forEach(item => {
                 if (!item) return;
-                const catId = item.categoryId || item.category || item.categoryLabel || '';
+                const catId = String(item.categoryId || item.category || item.categoryLabel || '').trim();
                 if (!catId || catId === 'all' || catId === 'semua') return;
                 const key = String(catId).toLowerCase();
                 if (catMap.has(key)) return;
@@ -9741,11 +9742,19 @@ git push -u origin main</pre>
               const cat = (this.menuCategories || []).find(c =>
                 c.id === item.categoryId || c.name === item.categoryId || c.id === item.category || c.name === item.category
               );
+
+              // ✅ FIX: Gunakan ID dari CSV, atau buat dari NAMA + SUPPLIER agar tidak duplikat
+              let finalId = item.id;
+              if (!finalId) {
+                const nameSlug = slugify(item.name);
+                const supplierSlug = slugify(item.supplier || 'umum');
+                finalId = `${nameSlug}-${supplierSlug}`;
+              }
+
               return {
                 ...item,
                 categoryName: cat ? cat.name : (item.categoryLabel || item.categoryId || ''),
-                // ID unik berdasarkan slug nama produk → re-import menimpa, tidak duplikat
-                id: item.id || slugify(item.name) || ('prod_' + Date.now()),
+                id: finalId,
               };
             });
             const remainder = this.csvImportParsed.length - toImport.length;
@@ -9840,9 +9849,21 @@ git push -u origin main</pre>
               return;
             }
 
-            // Ambil semua data produk (pakai limit besar untuk capture semua)
-            const result = await fetchFn({ limit: 500, orderByField: 'name', orderDirection: 'asc' });
-            const products = result && Array.isArray(result.products) ? result.products : [];
+            // Ambil semua data produk dengan looping pagination (tanpa terpotong di 100/500)
+            let allProducts = [];
+            let lastDoc = null;
+            let hasMore = true;
+
+            while (hasMore) {
+              const result = await fetchFn({ limit: 500, lastDoc, orderByField: 'name', orderDirection: 'asc' });
+              const products = result && Array.isArray(result.products) ? result.products : [];
+              allProducts = allProducts.concat(products);
+
+              lastDoc = result.lastDoc;
+              hasMore = result.hasMore;
+              if (products.length === 0) break; // Safety net
+            }
+            const products = allProducts; // Timpa variabel products lama
 
             // Buat CSV
             const headers = ['id', 'name', 'supplier', 'category', 'purchasePrice', 'Kredit(Y/N)'];
