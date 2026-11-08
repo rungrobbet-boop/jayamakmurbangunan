@@ -477,6 +477,8 @@ window.kasirApp = () => ({
   inventorySearch: '',
   inventoryPage: 1,
   inventoryPerPage: 20,
+  menuPage: 1,
+  menuPerPage: 20,
   isGeneratingMenu: false,
   inventoryTab: 'ingredients', // 'ingredients' | 'products' | 'pembelian'
   todayTotalRevenue: 2450000,
@@ -8281,6 +8283,19 @@ async loadMoreProducts() {
   totalInventoryPages() {
     const list = this.filteredInventoryList();
     return Math.ceil(list.length / this.inventoryPerPage) || 1;
+  },
+
+  // ✅ Getter untuk memotong katalog menu sesuai halaman
+  paginatedMenuList() {
+    const list = this.filteredMenuList();
+    const start = (this.menuPage - 1) * this.menuPerPage;
+    const end = start + this.menuPerPage;
+    return list.slice(start, end);
+  },
+
+  totalMenuPages() {
+    const list = this.filteredMenuList();
+    return Math.ceil(list.length / this.menuPerPage) || 1;
   },
 
   // ✅ Ringkasan stok untuk halaman paginasi
