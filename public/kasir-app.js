@@ -342,6 +342,12 @@ window.kasirApp = () => ({
   pinInput: '',
   pinErrorMessage: '',
   pinContext: null,               // { actionLabel, targetLabel, opts, resolve }
+  // Fase 2: Semi-Auto Fallback HPP Audit
+  fallbackHppQueue: [],           // antrean transaksi dengan isFallbackHpp: true
+  showFallbackHppModal: false,    // visibilitas modal audit fallback HPP
+  fallbackHppTransactions: [],    // data transaksi untuk ditampilkan di modal
+  fallbackHppPinInput: '',        // input PIN supervisor di modal fallback
+  fallbackHppPinError: '',        // error pesan PIN
   showGenerateSaldoModal: false,
   genSaldoForm: { pin: '', password: '', keyword: '' },
   qrisQrUrl: '',
@@ -873,6 +879,7 @@ window.kasirApp = () => ({
     window.addEventListener('online', () => {
       this.showToast('Koneksi internet kembali online. Memeriksa antrian transaksi...', 'notify');
       this.syncPendingTransactions();
+      this.checkFallbackHppQueue();  // Fase 2: cek antrean transaksi fallback HPP
     });
 
     // 4. Inisialisasi Koneksi Firebase Realtime Database
@@ -3499,6 +3506,29 @@ async loadMoreProducts() {
       try {
         await this._fbSet(this._fbRef(this._fbDb, `pos/transactions/${dateStr}/${txId}`), txRecord);
       } catch (e) { console.warn('[TX] Gagal simpan ulang isFallbackHpp:', e); }
+    }
+
+    // Fase 2: Simpan transaksi fallback ke antrean lokal untuk audit nanti
+    if (txRecord.isFallbackHpp) {
+      try {
+        const queue = JSON.parse(localStorage.getItem('dapur_fallback_hpp_queue') || '[]');
+        queue.push({
+          txId: txId,
+          orderId: txRecord.orderId || null,
+          date: txRecord.t ? new Date(txRecord.t).toISOString().slice(0, 16) : '',
+          hppLama: fifoResult.totalHpp || 0,   // HPP saat fallback (menggunakan harga estimasi)
+          totalHppBaru: 0,                      // akan dihitung ulang saat fix
+          items: txRecord.items || [],
+          pm: txRecord.pm || 'cash',
+          ksr: txRecord.ksr || '',
+          tot: txRecord.tot || 0,
+          queuedAt: Date.now()
+        });
+        localStorage.setItem('dapur_fallback_hpp_queue', JSON.stringify(queue));
+        console.log('[FALLBACK-HPP] ✅ Transaksi disimpan ke antrean audit:', txId);
+      } catch (e) {
+        console.warn('[FALLBACK-HPP] ⚠️ Gagal simpan ke antrean lokal:', e);
+      }
     }
 
     // ✅ Pemotongan stok RTDB — berjalan meski FIFO gagal (asalkan DB siap)
@@ -11052,6 +11082,103 @@ async loadMoreProducts() {
         console.log('[PIN-DEBUG] cancelSupervisorPin: resolve(false) called');
       }
     }
+  },
+
+  /** Fase 2: Cek antrean transaksi fallback HPP saat kembali online */
+  async checkFallbackHppQueue() {
+    try {
+      const raw = localStorage.getItem('dapur_fallback_hpp_queue');
+      if (!raw) return;
+      const queue = JSON.parse(raw);
+      const fallbackTx = queue.filter(t => t.isFallbackHpp !== false && t.hppLama !== undefined);
+      if (fallbackTx.length === 0) return;
+      this.fallbackHppTransactions = fallbackTx;
+      this.showFallbackHppModal = true;
+      this.showToast(`Ditemukan ${fallbackTx.length} transaksi HPP fallback yang perlu ditinjau`, 'notify');
+    } catch (e) {
+      console.warn('[FALLBACK-HPP] Gagal baca antrean:', e);
+    }
+  },
+
+  /** Fase 2: Batalkan modal fallback HPP */
+  cancelFallbackHppModal() {
+    this.showFallbackHppModal = false;
+    this.fallbackHppTransactions = [];
+    this.fallbackHppPinInput = '';
+    this.fallbackHppPinError = '';
+    this.playSound('click');
+  },
+
+  /** Fase 2: Proses perbaikan transaksi fallback HPP setelah PIN diverifikasi */
+  async fixFallbackHppTransactions() {
+    if (!this.fallbackHppTransactions || this.fallbackHppTransactions.length === 0) {
+      this.showFallbackHppModal = false;
+      return;
+    }
+
+    // Validasi PIN di input inline modal
+    const pin = String(this.fallbackHppPinInput || '').trim();
+    if (!pin || pin.length !== 6) {
+      this.fallbackHppPinError = '⚠️ PIN supervisor harus 6 digit';
+      return;
+    }
+    if (pin !== String(this.supervisorPin || '').trim()) {
+      this.fallbackHppPinError = '❌ PIN supervisor salah';
+      this.playSound('error');
+      return;
+    }
+
+    this.fallbackHppPinError = '';
+    const queue = JSON.parse(localStorage.getItem('dapur_fallback_hpp_queue') || '[]');
+    const remaining = [];
+    let successCount = 0;
+
+    for (const tx of this.fallbackHppTransactions) {
+      try {
+        // 1. VOID/Reversal jurnal HPP lama (tandai sebagai reversal di RTDB)
+        if (this._fbDb && this._fbRef && this._fbSet) {
+          const reversalRef = this._fbRef(this._fbDb, `pos/transactions/${tx.date ? tx.date.slice(0, 7) : 'unknown'}/${tx.txId}`);
+          await this._fbSet(reversalRef, { ...tx, reversedAt: Date.now(), reversalReason: 'fallback-hpp-fix' });
+        }
+
+        // 2. Hitung ulang HPP dengan processFifoSale (batch asli sudah ada karena online)
+        const normalizedItems = (tx.items || []).map(it => ({ id: it.id, qty: Number(it.qty || 0), price: Number(it.price || 0) }));
+        const fifoResult = await this.processFifoSale(normalizedItems);
+
+        // 3. Buat jurnal HPP baru via /accounting/journal/pos
+        const acctBody = {
+          txId: tx.txId,
+          type: 'pos',
+          date: tx.date ? tx.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+          total: tx.tot || 0,
+          totalHpp: fifoResult.totalHpp,
+          items: normalizedItems,
+          pm: tx.pm || 'cash',
+          ksr: tx.ksr || '',
+          fallbackFix: true,
+          hppLama: tx.hppLama || 0,
+          hppBaru: fifoResult.totalHpp
+        };
+        await fetch('/accounting/journal/pos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(acctBody)
+        });
+
+        successCount++;
+      } catch (e) {
+        console.warn('[FALLBACK-HPP] Gagal fix transaksi', tx.txId, e.message);
+        remaining.push(tx);
+      }
+    }
+
+    // Simpan sisa antrean yang gagal
+    localStorage.setItem('dapur_fallback_hpp_queue', JSON.stringify(remaining));
+    this.fallbackHppTransactions = [];
+    this.showFallbackHppModal = false;
+    this.fallbackHppPinInput = '';
+    this.showToast(`Fallback HPP fix selesai: ${successCount} berhasil, ${remaining.length} gagal (tetap di antrean)`, successCount > 0 ? 'success' : 'error');
+    this.playSound(successCount > 0 ? 'success' : 'error');
   },
 
   /** 🔒 Unlock input Harga Beli (purchasePrice) di form edit stok setelah verifikasi PIN supervisor */

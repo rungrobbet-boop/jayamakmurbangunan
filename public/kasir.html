@@ -6138,7 +6138,112 @@
 
     </div>
   </div>
-  
+
+  <!-- MODAL: FALLBACK HPP AUDIT (Fase 2) -->
+  <div
+    x-cloak
+    x-show="showFallbackHppModal"
+    @click.away="cancelFallbackHppModal()"
+    @keydown.escape.window="showFallbackHppModal && cancelFallbackHppModal()"
+    class="fixed inset-0 z-[99999999] overflow-y-auto bg-black/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 py-8 sm:py-6">
+    <div
+      class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border-2 border-amber-200 relative space-y-5">
+
+      <!-- Header -->
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-3xl bg-amber-100 text-amber-600 mx-auto flex items-center justify-center text-2xl mb-3 shadow-inner">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="font-black text-stone-900 text-lg tracking-tight">Audit HPP Fallback</h3>
+        <p class="text-xs font-bold text-amber-700 mt-1 uppercase tracking-wide">
+          Transaksi dengan HPP estimasi perlu ditinjau ulang
+        </p>
+      </div>
+
+      <!-- Tabel Rincian -->
+      <div class="overflow-x-auto max-h-60">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead class="bg-amber-50 text-amber-800 font-bold uppercase tracking-wider">
+            <tr>
+              <th class="px-3 py-2 border-b border-amber-200">Order ID</th>
+              <th class="px-3 py-2 border-b border-amber-200 text-right">HPP Lama (Fallback)</th>
+              <th class="px-3 py-2 border-b border-amber-200 text-right">HPP Baru (FIFO)</th>
+              <th class="px-3 py-2 border-b border-amber-200 text-right">Selisih</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-amber-100">
+            <template x-for="(tx, idx) in fallbackHppTransactions" :key="idx">
+              <tr class="hover:bg-amber-50/50 transition">
+                <td class="px-3 py-2 font-mono text-stone-800" x-text="tx.txId"></td>
+                <td class="px-3 py-2 text-right font-mono text-stone-600" x-text="formatRupiah(tx.hppLama || 0)"></td>
+                <td class="px-3 py-2 text-right font-mono text-emerald-700 font-bold" x-text="formatRupiah(tx.hppBaru || 0)"></td>
+                <td class="px-3 py-2 text-right font-mono text-rose-600" x-text="formatRupiah(((tx.hppBaru || 0) - (tx.hppLama || 0)))"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Total Selisih -->
+      <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+        <div class="flex justify-between items-center text-[11px] font-bold text-stone-700">
+          <span>Total Selisih HPP</span>
+          <span class="text-right font-mono text-rose-700" x-text="formatRupiah(fallbackHppTransactions.reduce((acc, tx) => acc + ((tx.hppBaru || 0) - (tx.hppLama || 0)), 0))"></span>
+        </div>
+      </div>
+
+      <!-- Input PIN Supervisor -->
+      <div>
+        <label class="block text-[11px] font-bold text-stone-700 uppercase mb-1.5 text-center">
+          Verifikasi Supervisor
+        </label>
+        <input
+          id="fallbackHppPinInput"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="6"
+          x-model="fallbackHppPinInput"
+          @keydown.enter.prevent="fixFallbackHppTransactions()"
+          @input="fallbackHppPinInput = String(fallbackHppPinInput || '').replace(/\\D/g, '').slice(0, 6); fallbackHppPinError = ''"
+          placeholder="••••••"
+          class="w-full h-16 text-center text-3xl font-black font-mono tracking-[0.6em] rounded-2xl border-2 border-stone-300 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 focus:outline-none transition"
+        />
+        <p
+          x-show="fallbackHppPinError"
+          x-transition
+          class="text-xs text-amber-600 font-bold mt-2 text-center"
+          x-text="fallbackHppPinError">
+        </p>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="grid grid-cols-2 gap-2.5 pt-1">
+        <button
+          type="button"
+          @click="cancelFallbackHppModal()"
+          class="min-h-[48px] rounded-xl border-2 border-stone-300 hover:bg-stone-100 text-stone-700 font-bold text-xs transition cursor-pointer">
+          <i class="fa-solid fa-xmark mr-1"></i> Batal
+        </button>
+        <button
+          type="button"
+          @click="fixFallbackHppTransactions()"
+          :disabled="fallbackHppPinInput.length !== 6"
+          :class="fallbackHppPinInput.length !== 6 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-amber-700 cursor-pointer'"
+          class="min-h-[48px] rounded-xl bg-amber-600 text-white font-black text-xs transition shadow-md shadow-amber-600/30 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-check text-xs"></i> Setujui & Perbaiki
+        </button>
+      </div>
+
+      <!-- Footer Note -->
+      <p class="text-[10px] text-stone-400 text-center italic border-t border-amber-100 pt-3">
+        <i class="fa-solid fa-circle-info mr-1"></i>
+        HPP Baru akan dihitung ulang via FIFO saat tombol disetujui. Jurnal lama akan dibatalkan.
+      </p>
+
+    </div>
+  </div>
+
   <!-- MODAL: KONFIRMASI LOGOUT KASIR -->
   <div 
     x-cloak 
