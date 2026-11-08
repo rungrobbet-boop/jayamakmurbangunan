@@ -811,6 +811,7 @@
             <input
               type="text"
               x-model="searchQuery"
+              @input="menuPage = 1"
               placeholder="Cari menu, SKU, atau Barcode..."
               class="w-full min-h-[44px] pl-10 pr-4 rounded-xl border border-stone-300 bg-stone-50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             <div class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
@@ -898,7 +899,12 @@
             </div>
 
             <!-- Grid Menu Produk (grid-cols-2 sm:grid-cols-3 xl:grid-cols-4) -->
-            <div 
+            <div class="text-sm text-gray-500 mb-4">
+              Menampilkan <span x-text="paginatedMenuList().length"></span> dari
+              <span x-text="filteredMenuList().length"></span> produk
+              (Total Keseluruhan: <span x-text="menuList.length"></span>)
+            </div>
+            <div
               x-show="!isLoadingMenu" 
               class="w-full max-w-full"
               :class="{
@@ -906,7 +912,7 @@
                 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3': viewMode === 'grid-small'
               }">
               
-              <template x-for="(menu, idx) in filteredMenuList()" :key="menu.id + '-' + idx">
+              <template x-for="(menu, idx) in paginatedMenuList()" :key="menu.id + '-' + idx">
   <div 
     @click="addToCart(menu)"
     class="bg-white rounded-2xl p-3 border border-stone-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer active:scale-98 select-none">
@@ -957,11 +963,32 @@
         class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition shadow-2xs">
         <i class="fa-solid fa-plus text-xs"></i>
       </button>
-    </div>
-  </div>
+        </div>
+      </div>
 </template>
 
-              <!-- State Jika Hasil Pencarian Kosong -->
+          <!-- Pagination Katalog Transaksi -->
+          <div class="flex justify-center items-center gap-4 mt-6 mb-8">
+            <button
+              @click="menuPage--; window.scrollTo(0, 0);"
+              :disabled="menuPage === 1"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+              &larr; Sebelumnya
+            </button>
+
+            <span class="text-sm font-semibold text-gray-700">
+              Halaman <span x-text="menuPage"></span> dari <span x-text="totalMenuPages()"></span>
+            </span>
+
+            <button
+              @click="menuPage++; window.scrollTo(0, 0);"
+              :disabled="menuPage >= totalMenuPages()"
+              class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              Selanjutnya &rarr;
+            </button>
+          </div>
+
+          <!-- State Jika Hasil Pencarian Kosong -->
               <div 
                 x-show="filteredMenuList().length === 0" 
                 class="col-span-full bg-white rounded-3xl p-8 text-center border border-stone-200 text-stone-500 space-y-3">
