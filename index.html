@@ -620,6 +620,7 @@
           <!-- 3. Supply Proyek -->
           <a
             href="#catering-section"
+            @click.prevent="activeTab = 'catering'; $nextTick(() => scrollToSection('catering-section'))"
             class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 p-3 rounded-2xl border transition-all text-left group shadow-2xs active:scale-95"
             :class="activeTab === 'menu' ? 'border-brand-500 bg-brand-50/80 text-brand-700 font-black ring-2 ring-brand-500/20' : 'border-stone-200 bg-white hover:border-brand-300 hover:bg-stone-50 text-stone-800 font-bold'"
             style="display: flex; flex-direction: column; align-items: start; gap: 2.5px; padding: 3px; border-radius: 0.5rem; border: 1px solid; transition: all 0.3s;">
