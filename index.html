@@ -605,34 +605,30 @@
           </button>
 
           <!-- 2. Pesanan B2B -->
-          <button
-            type="button"
-            @click="activeTab = 'catering'; isNavMenuOpen = false; scrollToSection('catering-section')"
+          <a
+            href="#b2b-section"
             class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 p-3 rounded-2xl border transition-all text-left group shadow-2xs active:scale-95"
-            :class="activeTab === 'catering' ? 'border-brand-500 bg-brand-50/80 text-brand-700 font-black ring-2 ring-brand-500/20' : 'border-stone-200 bg-white hover:border-brand-300 hover:bg-stone-50 text-stone-800 font-bold'">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition flex-shrink-0"
-              :class="activeTab === 'catering' ? 'bg-brand-600 text-white shadow-xs' : 'bg-stone-100 text-stone-700 group-hover:bg-brand-100 group-hover:text-brand-600'">
-              <i class="fa-solid fa-boxes-packing text-base"></i>
-            </div>
+            :class="activeTab === 'catering' ? 'border-brand-500 bg-brand-50/80 text-brand-700 font-black ring-2 ring-brand-500/20' : 'border-stone-200 bg-white hover:border-brand-300 hover:bg-stone-50 text-stone-800 font-bold'"
+            style="display: flex; flex-direction: column; align-items: start; gap: 2.5px; padding: 3px; border-radius: 0.5rem; border: 1px solid; transition: all 0.3s;">
+            <i class="fa-solid fa-boxes-packing text-base"></i>
             <div class="min-w-0">
               <span class="text-xs sm:text-sm block truncate">Pesanan B2B</span>
               <span class="text-[10px] text-stone-500 block font-normal mt-0.5">Order material skala besar</span>
             </div>
-          </button>
+          </a>
 
           <!-- 3. Supply Proyek -->
-          <button
-            type="button"
-            @click="activeTab = 'menu'; isNavMenuOpen = false; scrollToSection('tab-section')"
-            class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 p-3 rounded-2xl border transition-all text-left group shadow-2xs active:scale-95">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition flex-shrink-0 bg-stone-100 text-stone-700 group-hover:bg-brand-100 group-hover:text-brand-600">
-              <i class="fa-solid fa-truck text-base"></i>
-            </div>
+          <a
+            href="#tab-section"
+            class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 p-3 rounded-2xl border transition-all text-left group shadow-2xs active:scale-95"
+            :class="activeTab === 'menu' ? 'border-brand-500 bg-brand-50/80 text-brand-700 font-black ring-2 ring-brand-500/20' : 'border-stone-200 bg-white hover:border-brand-300 hover:bg-stone-50 text-stone-800 font-bold'"
+            style="display: flex; flex-direction: column; align-items: start; gap: 2.5px; padding: 3px; border-radius: 0.5rem; border: 1px solid; transition: all 0.3s;">
+            <i class="fa-solid fa-truck text-base"></i>
             <div class="min-w-0">
               <span class="text-xs sm:text-sm block truncate">Supply Proyek</span>
               <span class="text-[10px] text-stone-500 block font-normal mt-0.5">Supply bahan bangunan proyek</span>
             </div>
-          </button>
+          </a>
 
           <!-- 4. Link Online Shop (Shopee, Tokopedia, Blibli) -->
           <div class="flex gap-2 sm:flex-wrap p-3 rounded-2xl border transition-all text-left group shadow-2xs active:scale-95">
@@ -6219,7 +6215,7 @@ git push -u origin main</pre>
           cateringBadge: 'Pilihan Paket Supply Proyek',
           cateringTitle: 'Paket Material Pondasi & Rangka Atap',
           cateringSubtitle: 'Solusi borongan terpadu untuk renovasi rumah, ruko, gedung, dan fasilitas komersial.',
-          b2bBadge: 'Layanan Kontraktor & Developer Proyek',
+          b2bBadge: 'Layanan Kontraktor & Developer Proyek & B2B',
           b2bTitle: 'Pengadaan Material Skala Besar / Tender Proyek',
           b2bSubtitle: 'Kebutuhan proyek perumahan, infrastruktur, atau gudang pabrik? Kami sediakan faktur pajak resmi, uji lab mutu beton/baja, sertifikat SNI resmi, dan pengiriman armada truk colt/tronton.',
           address: 'Kawasan Industri & Pergudangan Terpadu Blok B No. 12, Jakarta',
