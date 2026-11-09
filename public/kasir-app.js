@@ -8547,10 +8547,12 @@ async loadMoreProducts() {
         menuObj.favoriteOrder = Number(this.recipeForm.favoriteOrder) || 0;
         menuObj.price = updatedPriceEcer; // backward compat
         menuObj.desc = ''; // no longer used in CSV form
+        menuObj.isReadyToSell = true;
+        menuObj.linkedMenuId = menuId;
       }
 
-      // ✅ Paksa isReadyToSell & linkedMenuId tetap ada di inventory item
-      const invItem = this.inventoryList.find(i => i.id === menuId);
+      // ✅ AUTO-MARK: Setiap Edit Produk otomatis menjadikan produk Siap Jual
+      const invItem = this.inventoryList.find(i => String(i.id) === String(menuId) || String(i.linkedMenuId) === String(menuId));
       if (invItem) {
         invItem.isReadyToSell = true;
         invItem.linkedMenuId = menuId;
@@ -8625,6 +8627,8 @@ async loadMoreProducts() {
                 supplier: updatedSupplier,
                 category: updatedCategoryId,
                 categoryId: updatedCategoryId,
+                isReadyToSell: true,
+                linkedMenuId: menuId,
                 priceEcer: updatedPriceEcer,
                 pricePartai: updatedPricePartai,
                 priceAgen: updatedPriceAgen,
