@@ -7418,6 +7418,14 @@ async loadMoreProducts() {
 
       this.showToast(`Stok "${item ? item.name : itemId}" diperbarui menjadi ${numStok}`, 'success');
       this.editStockModal = false;
+
+      // ✅ AUTO-MARK: Setelah update stok, pastikan isReadyToSell = true
+      if (item) {
+        item.isReadyToSell = true;
+        if (this._fbDb && this._fbSet && this._fbRef) {
+          await this._fbSet(this._fbRef(this._fbDb, `inventory/${itemId}`), item);
+        }
+      }
     } catch (err) {
       console.error('Gagal update stok:', err);
       this.showToast('Gagal memperbarui stok item', 'error');
