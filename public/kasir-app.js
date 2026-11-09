@@ -3532,6 +3532,12 @@ async loadMoreProducts() {
       console.error("[FIFO-TX] HPP akan 0 karena FIFO gagal di atas.");
     }
 
+    // ✅ Pengaman HPP: pastikan totalHpp selalu angka valid sebelum dipakai jurnal
+    if (!fifoResult || typeof fifoResult.totalHpp !== 'number' || isNaN(fifoResult.totalHpp)) {
+      fifoResult = { usedBatches: [], totalHpp: 0 };
+      console.warn('[FIFO-TX] Fallback HPP 0 karena FIFO gagal/NaN');
+    }
+
     // Simpan flag isFallbackHpp ke record transaksi
     txRecord.isFallbackHpp = fifoResult.isFallbackHpp || false;
     // Simpan ulang ke Firebase dengan field tambahan
@@ -8089,20 +8095,20 @@ async loadMoreProducts() {
         console.warn('[FIFO-EDIT] Gagal buat batch:', e);
       }
     } else if (this.stockChangeType === 'waste' && diff < 0 && totalValue > 0) {
+      // FIFO: Potong batch untuk waste (stok berkurang) — gagal FIFO tidak boleh blokir jurnal
+      try {
+        const qtyToCut = Math.abs(diff);
+        const r = await this.processFifoSale([{ id: this.selectedStockItem.id, qty: qtyToCut }]);
+        console.log(`[FIFO-WASTE] ✅ Batch dipotong untuk waste: ${qtyToCut} unit, HPP: ${r.totalHpp}`);
+      } catch (e) {
+        console.warn('[FIFO-WASTE] Gagal potong batch:', e);
+      }
+
       await this.autoCreateWasteJournal({
         date: new Date().toISOString().slice(0, 10),
         desc: `Bahan rusak/expired: ${this.selectedStockItem.name} ${Math.abs(diff)} ${this.selectedStockItem.unit}`,
         amount: totalValue
       });
-
-      // FIFO: Potong batch untuk waste (stok berkurang)
-      try {
-        const qtyToCut = Math.abs(diff);
-        const fifoResult = await this.processFifoSale([{ id: this.selectedStockItem.id, qty: qtyToCut }]);
-        console.log(`[FIFO-WASTE] ✅ Batch dipotong untuk waste: ${qtyToCut} unit, HPP: ${fifoResult.totalHpp}`);
-      } catch (e) {
-        console.warn('[FIFO-WASTE] Gagal potong batch:', e);
-      }
     }
 
     if (item && this.selectedStockItem) {
