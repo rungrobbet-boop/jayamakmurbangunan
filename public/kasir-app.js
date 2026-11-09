@@ -854,6 +854,8 @@ window.kasirApp = () => ({
    */
   async initKasir() {
     try {
+      // ✅ Paksa mode read-only OFF saat aplikasi dimuat
+      this.isReadOnlyMode = false;
         // 1. Cek sessionStorage "dapur_kasir_session"
     try {
       let rawSession = sessionStorage.getItem('dapur_kasir_session') || localStorage.getItem('dapur_kasir_session');
@@ -1801,6 +1803,8 @@ async loadMoreProducts() {
    */
   async listenMenuItems() {
     this.isLoadingMenu = true;
+    // ✅ Pastikan mode read-only OFF saat memuat menu
+    this.isReadOnlyMode = false;
 
     // Reset cursor pagination untuk load awal
     this.lastVisibleProduct = null;
