@@ -619,7 +619,7 @@
 
           <!-- 3. Supply Proyek -->
           <a
-            href="#tab-section"
+            href="#catering-section"
             class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 p-3 rounded-2xl border transition-all text-left group shadow-2xs active:scale-95"
             :class="activeTab === 'menu' ? 'border-brand-500 bg-brand-50/80 text-brand-700 font-black ring-2 ring-brand-500/20' : 'border-stone-200 bg-white hover:border-brand-300 hover:bg-stone-50 text-stone-800 font-bold'"
             style="display: flex; flex-direction: column; align-items: start; gap: 2.5px; padding: 3px; border-radius: 0.5rem; border: 1px solid; transition: all 0.3s;">
@@ -1492,7 +1492,7 @@
                   <span>Gunakan Lokasi GPS Saya</span>
                 </button>
               </div>
-              <textarea x-model="customerAddress" :required="!rtoPickup" rows="2" placeholder="Nama Jalan, No. Rumah, RT/RW, Patokan / Nama Kantor..." class="w-full p-2.5 rounded-xl border border-stone-300 text-xs sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+              <textarea x-model="customerAddress" rows="2" placeholder="Nama Jalan, No. Rumah, RT/RW, Patokan / Nama Kantor..." class="w-full p-2.5 rounded-xl border border-stone-300 text-xs sm:text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -8156,7 +8156,7 @@ git push -u origin main</pre>
             return;
           }
 
-          if (!this.customerName || !this.customerPhone || !this.customerAddress) {
+          if (!this.customerName || !this.customerPhone) {
             alert("Mohon lengkapi Nama, No WhatsApp, dan Alamat pengiriman!");
             return;
           }
