@@ -10053,6 +10053,13 @@ async loadMoreProducts() {
         }
       }
 
+      // ✅ Jika isCreditMap kosong setelah fetch Firestore, HENTIKAN proses — jangan generate jurnal yang salah
+      if (isCreditMap.size === 0) {
+        this.showToast('Gagal membaca isCredit dari Firestore products. Jurnal saldo awal dibatalkan agar tidak salah akun.', 'error');
+        console.error('[SALDO-AWAL] isCreditMap kosong — proses generate saldo awal dihentikan untuk mencegah jurnal salah catat.');
+        return;
+      }
+
       this.inventoryList.forEach(item => {
         const stock = Number(item.stock !== undefined ? item.stock : item.stok) || 0;
         const price = Number(item.purchasePrice) || 0;
@@ -10060,13 +10067,13 @@ async loadMoreProducts() {
         if (totalValue <= 0) return;
         grandTotal += totalValue;
 
-        // Ambil isCredit dari Firestore map, fallback ke inventoryList item
-        const isKredit = isCreditMap.has(item.id) ? isCreditMap.get(item.id) : (item.isCredit === true || item.isCredit === 'true' || item.isCredit === 1 || item.isCredit === 'Y' || Boolean(item.isCredit));
+        // Ambil isCredit HANYA dari Firestore map — RTDB inventoryList tidak punya field isCredit
+        const isKredit = isCreditMap.get(item.id) === true;
 
-        console.log(`[SALDO-AWAL] ${item.name} | isCredit: ${item.isCredit} | Firestore isCredit: ${isCreditMap.has(item.id) ? isCreditMap.get(item.id) : 'N/A'} | Stock: ${stock} | Total: ${totalValue} | Masuk ke: ${isKredit ? 'HUTANG (201)' : 'MODAL (301)'}`);
+        const supName = item.supplierName || item.supplier || 'Tanpa Supplier';
+        console.log(`[SALDO-AWAL] ${item.name} | Supplier: ${supName} | isKredit (Firestore): ${isKredit} | Stock: ${stock} | Total: ${totalValue} | Masuk ke: ${isKredit ? 'HUTANG (201)' : 'MODAL (301)'}`);
 
         if (isKredit) {
-          const supName = item.supplierName || item.supplier || 'Tanpa Supplier';
           if (!supplierHutang[supName]) supplierHutang[supName] = 0;
           supplierHutang[supName] += totalValue;
         } else {
