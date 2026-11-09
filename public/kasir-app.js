@@ -8549,6 +8549,13 @@ async loadMoreProducts() {
         menuObj.desc = ''; // no longer used in CSV form
       }
 
+      // ✅ Paksa isReadyToSell & linkedMenuId tetap ada di inventory item
+      const invItem = this.inventoryList.find(i => i.id === menuId);
+      if (invItem) {
+        invItem.isReadyToSell = true;
+        invItem.linkedMenuId = menuId;
+      }
+
       // 2. Ingredients (BOM) — bypass for toko bangunan, keep empty array
       this.menuRecipes[menuId] = {
         menuId: menuId,
@@ -13900,21 +13907,24 @@ async loadMoreProducts() {
 
   openGenerateMenuModal(item) {
     if (!item) return;
+    
+    // ✅ Ambil harga dari item, jangan biarkan 0 jika sudah ada
     const cost = Number(item.purchasePrice || item.hargaBeli || 0);
     const suggestedPrice = Math.round((cost * 1.2) / 1000) * 1000 || 15000;
+    
     this.generateMenuForm = {
       inventoryId: item.id,
-      name: item.name,
-      priceEcer: Number(item.priceEcer || item.price || 0),
-      pricePartai: Number(item.pricePartai || 0),
-      priceAgen: Number(item.priceAgen || 0),
-      minOrderPartai: Number(item.minOrderPartai || 1),
-      minOrderAgen: Number(item.minOrderAgen || 1),
-      price: Number(item.priceEcer || item.price || 0),
+      name: item.name || '',
+      priceEcer: Number(item.priceEcer || item.price) || suggestedPrice,
+      pricePartai: Number(item.pricePartai) || Math.round(suggestedPrice * 0.95 / 100) * 100,
+      priceAgen: Number(item.priceAgen) || Math.round(suggestedPrice * 0.9 / 100) * 100,
+      minOrderPartai: Number(item.minOrderPartai) || 1,
+      minOrderAgen: Number(item.minOrderAgen) || 1,
+      price: Number(item.priceEcer || item.price) || suggestedPrice,
       cost: cost,
-      category: 'bahan_bangunan',
-      desc: `Menu siap saji langsung dari bahan baku ${item.name}`,
-      image: ''
+      category: item.categoryId || item.category || 'bahan_bangunan',
+      desc: item.desc || '',
+      image: item.image || ''
     };
     this.generateMenuModal = true;
   },
