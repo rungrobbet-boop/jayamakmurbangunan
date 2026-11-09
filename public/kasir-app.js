@@ -9998,26 +9998,47 @@ async loadMoreProducts() {
       return;
     }
 
-    // --- LAPISAN 2: Cek ke Firebase RTDB ---
+    // --- LAPISAN 2: Cek ke Firebase RTDB (Tanpa Query Index) ---
     try {
       const bulan = new Date().toISOString().slice(0, 7);
       const fbUrl = (this._fbConfig && this._fbConfig.databaseURL) || '';
-      const checkUrl = `${fbUrl.replace(/\/$/, '')}/accounting/journal/${bulan}.json?orderBy="ref"&equalTo="SALDO-AWAL-ALL"`;
 
+      // Ambil SEMUA jurnal bulan ini (bukan query)
+      const checkUrl = `${fbUrl.replace(/\/$/, '')}/accounting/journal/${bulan}.json`;
       const checkRes = await fetch(checkUrl);
-      const existingData = await checkRes.json();
 
-      if (existingData && Object.keys(existingData).length > 0) {
-        this.showToast('Jurnal Saldo Awal sudah ada di database. Proses dibatalkan.', 'error');
-        // Set localStorage agar sinkron jika user ganti device
-        localStorage.setItem('dapur_opening_balance_done', 'true');
-        this.showGenerateSaldoModal = false; // Tutup modal jika terbuka
-        return;
+      // Jika response OK, parse data
+      if (checkRes.ok) {
+        const allJournals = await checkRes.json();
+
+        // Cek apakah ada jurnal dengan ref 'SALDO-AWAL-ALL' di dalam object
+        let hasSaldoAwal = false;
+        if (allJournals && typeof allJournals === 'object') {
+          for (const key in allJournals) {
+            if (allJournals[key] && allJournals[key].ref === 'SALDO-AWAL-ALL') {
+              hasSaldoAwal = true;
+              break;
+            }
+          }
+        }
+
+        if (hasSaldoAwal) {
+          this.showToast('Jurnal Saldo Awal sudah ada di database. Proses dibatalkan.', 'error');
+          localStorage.setItem('dapur_opening_balance_done', 'true');
+          this.showGenerateSaldoModal = false;
+          return;
+        }
+      } else {
+        // Jika response 404 (belum ada jurnal bulan ini), LANJUTKAN proses (anggap kosong)
+        if (checkRes.status !== 404) {
+          console.warn('[SALDO-AWAL] Firebase response error:', checkRes.status);
+          // Jika error selain 404 (misal 500), kita bisa tetap lanjut atau batalkan.
+          // Demi keamanan, kita lanjutkan dengan warning (karena localStorage mungkin sudah 'false').
+        }
       }
     } catch (e) {
       console.warn('[SALDO-AWAL] Gagal cek database:', e);
-      this.showToast('Gagal memverifikasi status saldo awal. Coba lagi.', 'error');
-      return;
+      // Jangan batalkan proses hanya karena error jaringan, biarkan Lapisan 1 (localStorage) yang jadi pengaman utama.
     }
     // --- AKHIR LAPISAN 2 ---
 
