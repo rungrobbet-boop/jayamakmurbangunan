@@ -13920,20 +13920,28 @@ async loadMoreProducts() {
   openGenerateMenuModal(item) {
     if (!item) return;
     console.log('DEBUG CATEGORY:', item.categoryId, item.category, item.name);
-    
-    // ✅ Ambil harga dari item, jangan biarkan 0 jika sudah ada
+
+    // ✅ Pastikan kategori item ada di daftar categories agar dropdown menampilkannya (bukan default "Semua")
+    const itemCatId = item.categoryId || item.category;
+    if (itemCatId && !this.categories.find(c => String(c.id) === String(itemCatId))) {
+      this.categories.push({ id: itemCatId, name: itemCatId });
+    }
+
     const cost = Number(item.purchasePrice || item.hargaBeli || 0);
-    const suggestedPrice = Math.round((cost * 1.2) / 1000) * 1000 || 15000;
-    
+    const suggestedPrice = Math.round((cost * 1.2) / 500) * 500 || 15000;
+
+    // ✅ Bulatkan ke kelipatan 500 karena input HTML pakai step="500" (hindari validasi gagal seperti 5750)
+    const round500 = (v) => Math.max(0, Math.round(Number(v || 0) / 500) * 500);
+
     this.generateMenuForm = {
       inventoryId: item.id,
       name: item.name || '',
-      priceEcer: Number(item.priceEcer || item.price) || suggestedPrice,
-      pricePartai: Number(item.pricePartai) || Math.round(suggestedPrice * 0.95 / 100) * 100,
-      priceAgen: Number(item.priceAgen) || Math.round(suggestedPrice * 0.9 / 100) * 100,
+      priceEcer: round500(item.priceEcer || item.price) || suggestedPrice,
+      pricePartai: round500(item.pricePartai) || Math.round(suggestedPrice * 0.95 / 500) * 500,
+      priceAgen: round500(item.priceAgen) || Math.round(suggestedPrice * 0.9 / 500) * 500,
       minOrderPartai: Number(item.minOrderPartai) || 1,
       minOrderAgen: Number(item.minOrderAgen) || 1,
-      price: Number(item.priceEcer || item.price) || suggestedPrice,
+      price: round500(item.priceEcer || item.price) || suggestedPrice,
       cost: cost,
       category: item.categoryId || item.category || 'bahan_bangunan',
       desc: item.desc || '',
