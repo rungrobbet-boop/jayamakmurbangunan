@@ -8240,11 +8240,9 @@
               x-model="generateMenuForm.category"
               disabled
               class="w-full min-h-[42px] px-3 rounded-xl border border-stone-300 bg-stone-50 focus:bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
-              <option value="bahan_bangunan">Bahan Bangunan</option>
-              <option value="semen">Semen</option>
-              <option value="cat">Cat</option>
-              <option value="besi">Besi</option>
-              <option value="lainnya">Lainnya</option>
+              <template x-for="cat in categories" :key="cat.id">
+                <option :value="cat.id" x-text="cat.name"></option>
+              </template>
             </select>
           </div>
         </div>

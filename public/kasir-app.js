@@ -13919,6 +13919,7 @@ async loadMoreProducts() {
 
   openGenerateMenuModal(item) {
     if (!item) return;
+    console.log('DEBUG CATEGORY:', item.categoryId, item.category, item.name);
     
     // ✅ Ambil harga dari item, jangan biarkan 0 jika sudah ada
     const cost = Number(item.purchasePrice || item.hargaBeli || 0);
