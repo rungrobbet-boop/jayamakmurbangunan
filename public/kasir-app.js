@@ -14061,6 +14061,34 @@ async loadMoreProducts() {
         } catch(e){}
       }
 
+      // ✅ Simpan newMenuItem ke Firestore products agar tidak hilang setelah Sync (listenMenuItems baca dari sini)
+      if (FB_FS) {
+        try {
+          await FB_FS.collection('products').doc(newMenuId).set({
+            id: newMenuId,
+            name: newMenuItem.name,
+            category: newMenuItem.category,
+            categoryId: newMenuItem.category,
+            priceEcer: newMenuItem.priceEcer,
+            pricePartai: newMenuItem.pricePartai,
+            priceAgen: newMenuItem.priceAgen,
+            minOrderPartai: newMenuItem.minOrderPartai,
+            minOrderAgen: newMenuItem.minOrderAgen,
+            stock: newMenuItem.stock || 0,
+            stok: newMenuItem.stock || 0,
+            isReadyToSell: true,
+            linkedMenuId: newMenuId,
+            imageUrl: newMenuItem.image,
+            inventoryId: newMenuItem.inventoryId,
+            supplierId: newMenuItem.supplierId || '',
+            supplierName: newMenuItem.supplierName || '',
+            isConsignment: newMenuItem.isConsignment || false,
+            desc: newMenuItem.desc || '',
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        } catch(e){}
+      }
+
       this.generateMenuModal = false;
       this.playSound('success');
       this.showToast(`Menu "${newMenuItem.name}" berhasil dipublish ke POS!`, 'success');
